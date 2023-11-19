@@ -3,105 +3,105 @@ const helper = require('./helper.js');
 const React = require('react');
 const ReactDOM = require('react-dom');
 
-const handleDomo = (e) => {
+const handleAaah = (e) => {
   e.preventDefault();
   helper.hideError();
 
-  const name = e.target.querySelector('#domoName').value;
-  const level = e.target.querySelector('#domoLevel').value;
-  const age = e.target.querySelector('#domoAge').value;
+  const name = e.target.querySelector('#aaahName').value;
+  const level = e.target.querySelector('#aaahLevel').value;
+  const age = e.target.querySelector('#aaahAge').value;
 
   if (!name || !age || !level) {
     helper.handleError('All fields are required!');
     return false;
   }
 
-  helper.sendPost(e.target.action, { name, level, age }, loadDomosFromServer);
+  helper.sendPost(e.target.action, { name, level, age }, loadAaahsFromServer);
   return false;
 }
 
-const deleteDomo = (e) => {
-  const id =  e.target.getAttribute('domoID');
+const deleteAaah = (e) => {
+  const id =  e.target.getAttribute('aaahID');
 
   if (!id) {
-    helper.handleError('Requires an ID for a domo in the database!');
+    helper.handleError('Requires an ID for a aaah in the database!');
     return false;
   }
 
-  helper.sendDelete('/deleteDomo', { id }, loadDomosFromServer);
+  helper.sendDelete('/deleteAaah', { id }, loadAaahsFromServer);
   return false;
 }
 
-const DomoForm = (props) => {
+const AaahForm = (props) => {
   return (
-    <form id="domoForm"
-      onSubmit={handleDomo}
-      name="domoForm"
+    <form id="aaahForm"
+      onSubmit={handleAaah}
+      name="aaahForm"
       action='/maker'
       method='POST'
-      className='domoForm'
+      className='aaahForm'
     >
       <label htmlFor="name">Name: </label>
-      <input type="text" name="name" id="domoName" placeholder='Domo Name' />
+      <input type="text" name="name" id="aaahName" placeholder='Aaah Name' />
       <label htmlFor="level">Level: </label>
-      <input type="number" min="0" name="level" id="domoLevel" />
+      <input type="number" min="0" name="level" id="aaahLevel" />
       <label htmlFor="age">Age: </label>
-      <input type="number" min="0" name="age" id="domoAge" />
-      <input className='makeDomoSubmit' type="submit" value="Make Domo" />
+      <input type="number" min="0" name="age" id="aaahAge" />
+      <input className='makeAaahSubmit' type="submit" value="Make Aaah" />
     </form>
   );
 }
 
-const DomoList = (props) => {
-  if(props.domos.length === 0) {
+const AaahList = (props) => {
+  if(props.aaahs.length === 0) {
     return (
-      <div className='domoList'>
-        <h3 className='emptyDomo'>No Domos Yet!</h3>
+      <div className='aaahList'>
+        <h3 className='emptyAaah'>No Aaahs Yet!</h3>
       </div>
     );
   }
 
 
-  const domoNodes = props.domos.map(domo => {
+  const aaahNodes = props.aaahs.map(aaah => {
     return (
-      <div key={domo._id} className="domo">
-        <img src="/assets/img/domoface.jpeg" alt="domo face" className='domoFace' />
-        <h3 className='domoName'>Name: {domo.name}</h3>
-        <button onClick={deleteDomo} domoID={domo._id} className='domoDel'>DEL</button>
-        <h3 className='domoLevel'>Level: {domo.level}</h3>
-        <h3 className='domoAge'>Age: {domo.age}</h3>
+      <div key={aaah._id} className="aaah">
+        <img src="/assets/img/domoface.jpeg" alt="aaah face" className='aaahFace' />
+        <h3 className='aaahName'>Name: {aaah.name}</h3>
+        <button onClick={deleteAaah} aaahID={aaah._id} className='aaahDel'>DEL</button>
+        <h3 className='aaahLevel'>Level: {aaah.level}</h3>
+        <h3 className='aaahAge'>Age: {aaah.age}</h3>
       </div>
     );
   });
 
   return (
-    <div className='domoList'>
-      {domoNodes}
+    <div className='aaahList'>
+      {aaahNodes}
     </div>
   );
 }
 
-const loadDomosFromServer = async () => {
-  const response = await fetch('/getDomos');
+const loadAaahsFromServer = async () => {
+  const response = await fetch('/getAaahs');
   const data = await response.json();
 
   ReactDOM.render(
-    <DomoList domos={data.domos} />,
-    document.getElementById('domos')
+    <AaahList aaahs={data.aaahs} />,
+    document.getElementById('aaahs')
   );
 }
 
 const init = () => {
   ReactDOM.render(
-    <DomoForm />,
-    document.getElementById('makeDomo')
+    <AaahForm />,
+    document.getElementById('makeAaah')
   );
 
   ReactDOM.render(
-    <DomoList domos={[]} />,
-    document.getElementById('domos')
+    <AaahList aaahs={[]} />,
+    document.getElementById('aaahs')
   );
 
-  loadDomosFromServer();
+  loadAaahsFromServer();
 }
 window.onload = init;
