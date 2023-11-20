@@ -104,4 +104,4 @@ const init = () => {
 
   loadAaahsFromServer();
 }
-window.onload = init;
+//window.onload = init;

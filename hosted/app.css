@@ -1,0 +1,56 @@
+html {
+    background-color: #A1D2B3;
+}
+
+body {
+    font-family: Verdana, Geneva, Tahoma, sans-serif;
+    font-size: 2em;
+    color: #355070;
+}
+
+#wrapper {
+    display: flex;
+    flex-flow: column nowrap;
+    align-items: center;
+
+    /* 
+    #CC2936 // "Persian Red", contrast
+    #F0FFF1 // Shallower Mint Green
+    #C2F8CB // Mint Green
+    #B3E9C7 // Deeper Mint Green
+    #355070 // Navy Blue, main color
+     */
+}
+
+#content, #header, #footer {
+    display: flex;
+    flex-flow: column nowrap;
+    align-items: center;
+    justify-content: center;
+
+    width: 1000px;
+    padding: 40px;
+
+    background-color: #AFDFB7;
+}
+
+#content {
+    height: 650px;
+
+    border-top: 1px solid #355070;
+    border-bottom: 1px solid #355070;
+    
+    color: #CC2936;
+
+    /* background-color: #FFB479; */
+}
+
+
+
+#side {
+    position: absolute;
+    top: 0px;
+    left: 0px;
+
+    transform: translate(-80px);
+}
