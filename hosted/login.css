@@ -7,6 +7,14 @@ body {
     color: #355070;
 }
 
+a:link {
+    color: #007AA4;
+}
+
+a:visited {
+    color: #303691;
+}
+
 
 
 form {
@@ -16,6 +24,10 @@ form {
 
 label {
     margin-right: 10px;
+}
+
+input {
+    margin-bottom: 20px;
 }
 
 #message p {

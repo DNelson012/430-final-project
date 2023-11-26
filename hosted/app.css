@@ -1,25 +1,35 @@
+:root {
+    --main: #355070;
+    --contrast: #CC2936;
+
+    --backAlt: #C2F8CB;
+    --back: #AFDFB7;
+    --backDark: #A1D2B3;
+    --backLight: #B3E9C7;
+}
+
 html {
-    background-color: #A1D2B3;
+    background-color: var(--backDark);
 }
 
 body {
     font-family: Verdana, Geneva, Tahoma, sans-serif;
     font-size: 2em;
-    color: #355070;
+    color: var(--main);
+}
+
+a:link {
+    color: #007AA4;
+}
+
+a:visited {
+    color: #303691;
 }
 
 #wrapper {
     display: flex;
     flex-flow: column nowrap;
     align-items: center;
-
-    /* 
-    #CC2936 // "Persian Red", contrast
-    #F0FFF1 // Shallower Mint Green
-    #C2F8CB // Mint Green
-    #B3E9C7 // Deeper Mint Green
-    #355070 // Navy Blue, main color
-     */
 }
 
 #content, #header, #footer {
@@ -31,18 +41,49 @@ body {
     width: 1000px;
     padding: 40px;
 
-    background-color: #AFDFB7;
+    background-color: var(--back);
 }
 
 #content {
     height: 650px;
 
-    border-top: 1px solid #355070;
-    border-bottom: 1px solid #355070;
+    border-top: 1px solid var(--main);
+    border-bottom: 1px solid var(--main);
     
-    color: #CC2936;
+    color: var(--contrast);
+}
 
-    /* background-color: #FFB479; */
+/* Every React component inside the content section
+should have these rules */
+#content>* {
+    display: flex;
+    flex-flow: column nowrap;
+    align-items: center;
+    justify-content: center;
+}
+
+#content>* button {
+    color: var(--contrast);
+    background-color: var(--backLight);
+    border: 2px solid var(--main);
+}
+
+#content>* button:hover {
+    filter: brightness(95%);
+}
+
+
+
+#lobbyMenu button {
+    font-size: 2em;
+    margin: 20px;
+    padding: 10px 20px;
+}
+
+#lobbyJoin button, #lobbyCreate button {
+    font-size: 0.5em;
+    margin: 16px;
+    padding: 5px 10px;
 }
 
 

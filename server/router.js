@@ -1,7 +1,12 @@
+
 const controllers = require('./controllers');
 const mid = require('./middleware');
 
 const router = (app) => {
+  //app.get()
+
+
+
   app.get('/getAaahs', mid.requiresLogin, controllers.Aaah.getAaahs);
   app.delete('/deleteAaah', mid.requiresLogin, controllers.Aaah.deleteAaah);
 
