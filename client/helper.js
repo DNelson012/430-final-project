@@ -1,19 +1,18 @@
-/* Takes in an error message. Sets the error message up in html, and
-   displays it to the user. Will be hidden by other events that could
-   end in an error.
-*/
+
+// Takes in an error message. Sets the error message up in html, and
+// displays it to the user. Will be hidden by other events that could
+// end in an error.
 const handleError = (message) => {
-  document.getElementById('errorMessage').textContent = message;
-  document.getElementById('aaahMessage').classList.remove('hidden');
+  document.querySelector('#message p').textContent = message;
+  document.querySelector('#message').classList.remove('hidden');
 };
 
 const hideError = () => {
-  document.getElementById('aaahMessage').classList.add('hidden');
+  document.querySelector('#message').classList.add('hidden');
 }
 
-/* Sends post requests to the server using fetch. Will look for various
-   entries in the response JSON object, and will handle them appropriately.
-*/
+// Sends post requests to the server using fetch. Will look for various
+// entries in the response JSON object, and will handle them appropriately.
 const sendPost = async (url, data, handler) => {
   const response = await fetch(url, {
     method: 'POST',
@@ -24,7 +23,7 @@ const sendPost = async (url, data, handler) => {
   });
 
   const result = await response.json();
-  document.getElementById('aaahMessage').classList.add('hidden');
+  hideError();
 
   if(result.redirect) {
     window.location = result.redirect;
@@ -48,16 +47,9 @@ const sendDelete = async (url, data, handler) => {
     body: JSON.stringify(data),
   });
 
-  const result = await response;
-  console.log(result);
-  document.getElementById('aaahMessage').classList.add('hidden');
-
-  // if(result.error) {
-  //   handleError(result.error);
-  // }
+  hideError();
 
   if(handler) {
-    //handler(result);
     handler();
   }
 }

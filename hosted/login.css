@@ -1,0 +1,30 @@
+html {
+    background-color: #A1D2B3;
+}
+
+body {
+    font-family: Verdana, Geneva, Tahoma, sans-serif;
+    color: #355070;
+}
+
+
+
+form {
+    text-align: right;
+    width: 300px;
+}
+
+label {
+    margin-right: 10px;
+}
+
+#message p {
+    font-style: italic;
+    color: #CC2936;
+}
+
+
+
+.hidden {
+    display: none;
+}

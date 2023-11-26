@@ -15,7 +15,7 @@ const handleLogin = (e) => {
     return false;
   }
 
-  helper.sendPost(e.target.action, {username, pass});
+  helper.sendPost(e.target.action, { username, pass });
 
   return false;
 }
@@ -23,7 +23,7 @@ const handleLogin = (e) => {
 const handleSignup = (e) => {
   e.preventDefault();
   helper.hideError();
-  
+
   const username = e.target.querySelector('#user').value;
   const pass = e.target.querySelector('#pass').value;
   const pass2 = e.target.querySelector('#pass2').value;
@@ -32,13 +32,13 @@ const handleSignup = (e) => {
     helper.handleError('All fields are required!');
     return false;
   }
-  
+
   if (pass !== pass2) {
     helper.handleError('Passwords do not match!');
     return false;
   }
 
-  helper.sendPost(e.target.action, {username, pass, pass2});
+  helper.sendPost(e.target.action, { username, pass, pass2 });
 
   return false;
 }
@@ -56,10 +56,13 @@ const LoginWindow = (props) => {
     >
       <label htmlFor="username">Username: </label>
       <input type="text" name="username" id="user" placeholder='username' />
+      <br />
       <label htmlFor="pass">Password: </label>
       <input type="password" name="pass" id="pass" placeholder='password' />
+      <br />
       <input className='formSubmit' type="submit" value="Sign in" />
     </form>
+
   );
 }
 
@@ -74,10 +77,13 @@ const SignupWindow = (props) => {
     >
       <label htmlFor="username">Username: </label>
       <input type="text" name="username" id="user" placeholder='username' />
+      <br />
       <label htmlFor="pass">Password: </label>
       <input type="password" name="pass" id="pass" placeholder='password' />
+      <br />
       <label htmlFor="pass2">Password: </label>
       <input type="password" name="pass2" id="pass2" placeholder='retype password' />
+      <br />
       <input className='formSubmit' type="submit" value="Sign up" />
     </form>
   );
@@ -91,19 +97,19 @@ const init = () => {
 
   loginButton.addEventListener('click', (e) => {
     e.preventDefault();
-    ReactDOM.render(<LoginWindow />, 
+    ReactDOM.render(<LoginWindow />,
       document.getElementById('content'));
     return false;
   });
 
   signupButton.addEventListener('click', (e) => {
     e.preventDefault();
-    ReactDOM.render(<SignupWindow />, 
+    ReactDOM.render(<SignupWindow />,
       document.getElementById('content'));
     return false;
   });
 
-  ReactDOM.render(<LoginWindow />, 
+  ReactDOM.render(<LoginWindow />,
     document.getElementById('content'));
 }
 window.onload = init;
