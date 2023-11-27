@@ -7,7 +7,7 @@
     "webpack": "webpack",
     "webpackWatch": "webpack watch",
     "nodemon": "nodemon -e js,html,css --watch ./server --watch ./hosted ./server/app.js",
-    "start": "node ./server/app.js",
+    "start": "webpack && node ./server/app.js",
     "pretest": "eslint ./server --fix",
     "test": "echo \"Tests complete\"",
     "heroku-postbuild": "webpack"

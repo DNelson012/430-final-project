@@ -2,7 +2,7 @@ const models = require('../models');
 
 const { Aaah } = models;
 
-const makerPage = async (req, res) => res.render('app');
+const makerPage = async (req, res) => res.render('menu');
 
 const getAaahs = async (req, res) => {
   try {
