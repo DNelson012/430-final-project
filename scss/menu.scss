@@ -1,19 +1,5 @@
-html {
-  background-color: #A1D2B3;
-}
 
-body {
-  font-family: Verdana, Geneva, Tahoma, sans-serif;
-  color: #355070;
-}
-
-a:link {
-  color: #007AA4;
-}
-
-a:visited {
-  color: #303691;
-}
+@use 'main';
 
 body {
   font-size: 2em;
@@ -30,34 +16,41 @@ body {
   flex-flow: column nowrap;
   align-items: center;
   justify-content: center;
+
   width: 1000px;
   padding: 40px;
-  background-color: #AFDFB7;
+
+  background-color: main.$back;
 }
 
 #content {
   height: 650px;
-  border-top: 1px solid #355070;
-  border-bottom: 1px solid #355070;
-  color: #CC2936;
+
+  border-top: 1px solid main.$primary;
+  border-bottom: 1px solid main.$primary;
+  
+  color: main.$contrast;
 }
 
 /* Every React component inside the content section
 should have these rules */
-#content > * {
+#content>* {
   display: flex;
   flex-flow: column nowrap;
   align-items: center;
   justify-content: center;
+
+  button {
+    color: main.$contrast;
+    background-color: main.$backLight;
+    border: 2px solid main.$primary;
+  }
+  button:hover {
+    filter: brightness(95%);
+  }
 }
-#content > * button {
-  color: #CC2936;
-  background-color: #B3E9C7;
-  border: 2px solid #355070;
-}
-#content > * button:hover {
-  filter: brightness(95%);
-}
+
+
 
 #lobbyMenu button {
   font-size: 2em;
@@ -71,9 +64,12 @@ should have these rules */
   padding: 5px 10px;
 }
 
+
+
 #side {
   position: absolute;
   top: 0px;
   left: 0px;
+
   transform: translate(-80px);
 }

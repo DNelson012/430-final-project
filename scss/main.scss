@@ -1,0 +1,31 @@
+
+@use 'sass:math';
+
+$primary: #355070;
+$contrast: #CC2936;
+
+$backAlt: #C2F8CB;
+$back: #AFDFB7;
+$backDark: #A1D2B3;
+$backLight: #B3E9C7;
+
+@function divMargin($width){
+  @return math.div($width, 4);
+}
+
+html {
+  background-color: $backDark;
+}
+
+body {
+  font-family: Verdana, Geneva, Tahoma, sans-serif;
+  color: $primary;
+}
+
+a:link {
+  color: #007AA4;
+}
+
+a:visited {
+  color: #303691;
+}

@@ -1,42 +1,38 @@
 html {
-    background-color: #A1D2B3;
+  background-color: #A1D2B3;
 }
 
 body {
-    font-family: Verdana, Geneva, Tahoma, sans-serif;
-    color: #355070;
+  font-family: Verdana, Geneva, Tahoma, sans-serif;
+  color: #355070;
 }
 
 a:link {
-    color: #007AA4;
+  color: #007AA4;
 }
 
 a:visited {
-    color: #303691;
+  color: #303691;
 }
 
-
-
 form {
-    text-align: right;
-    width: 300px;
+  text-align: right;
+  width: 300px;
 }
 
 label {
-    margin-right: 10px;
+  margin-right: 10px;
 }
 
 input {
-    margin-bottom: 20px;
+  margin-bottom: 20px;
 }
 
 #message p {
-    font-style: italic;
-    color: #CC2936;
+  font-style: italic;
+  color: #CC2936;
 }
 
-
-
 .hidden {
-    display: none;
+  display: none;
 }

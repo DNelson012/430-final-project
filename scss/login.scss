@@ -1,0 +1,26 @@
+
+@use 'main';
+
+form {
+  text-align: right;
+  width: 300px;
+}
+
+label {
+  margin-right: 10px;
+}
+
+input {
+  margin-bottom: 20px;
+}
+
+#message p {
+  font-style: italic;
+  color: main.$contrast;
+}
+
+
+
+.hidden {
+  display: none;
+}
