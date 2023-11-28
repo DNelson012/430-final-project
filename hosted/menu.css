@@ -58,17 +58,42 @@ should have these rules */
 #content > * button:hover {
   filter: brightness(95%);
 }
+#content > * label {
+  margin: 60px 0 10px;
+}
+#content > * input {
+  width: 160px;
+  font-size: 1em;
+  text-align: center;
+}
 
-#lobbyMenu button {
+.buttonLarge {
   font-size: 2em;
   margin: 20px;
   padding: 10px 20px;
 }
 
-#lobbyJoin button, #lobbyCreate button {
+.buttonSmall {
   font-size: 0.5em;
   margin: 16px;
   padding: 5px 10px;
+}
+
+#lobbySubmit {
+  font-size: 1em;
+  margin-top: 10px;
+}
+
+#lobbyLounge span {
+  margin-bottom: 10px;
+}
+
+#lobbyChat {
+  border: 2px solid #355070;
+  padding: 20px;
+}
+#lobbyChat span {
+  display: block;
 }
 
 #side {
