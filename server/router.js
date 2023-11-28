@@ -14,6 +14,8 @@ const router = (app) => {
 
   //app.get()
 
+  app.get('/*', controllers.notFound);
+
 
 
   app.get('/getAaahs', mid.requiresLogin, controllers.Aaah.getAaahs);
