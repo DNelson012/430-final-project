@@ -13,7 +13,7 @@ const RedisStore = require('connect-redis').default;
 const redis = require('redis');
 
 const router = require('./router.js');
-// const socketSetup = require('./io.js');
+const socketSetup = require('./io.js');
 
 const port = process.env.PORT || process.env.NODE_PORT || 3000;
 
@@ -55,15 +55,10 @@ redisClient.connect().then(() => {
   app.set('views', `${__dirname}/../views`);
 
   router(app);
-  // const server = socketSetup(app);
+  const server = socketSetup(app);
 
-  app.listen(port, (err) => {
+  server.listen(port, (err) => {
     if (err) { throw err; }
     console.log(`Listening on port ${port}`);
   });
-
-  // server.listen(port, (err) => {
-  //   if (err) { throw err; }
-  //   console.log(`Listening on port ${port}`);
-  // });
 });
