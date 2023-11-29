@@ -5,10 +5,11 @@ const { Server } = require('socket.io');
 let io;
 const idToName = {};
 const idToLobby = {};
+// https://socket.io/how-to/use-with-express-session
+// To set up better state management
 
 // Helpers
 // https://stackoverflow.com/questions/23187013/is-there-a-better-way-to-sanitize-input-with-javascript
-/*
 const sanitizeString = (inStr) => {
   let str = inStr
   str = str.replace(/[^a-z0-9áéíóúñü \.,_-]/gim, "");
@@ -17,7 +18,19 @@ const sanitizeString = (inStr) => {
   // I can do this on individual segments between '/' characters
   //  And also discard anything past '?' on the last segment
 }
-*/
+
+// https://stackoverflow.com/questions/1349404/generate-random-string-characters-in-javascript
+function makeID(length) {
+  let result = '';
+  const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+  const charactersLength = characters.length;
+  let counter = 0;
+  while (counter < length) {
+    result += characters.charAt(Math.floor(Math.random() * charactersLength));
+    counter += 1;
+  }
+  return result;
+}
 
 // Leave every lobby, if the user is in any
 //  A bit of a nuclear approach, but it should work fine
@@ -51,13 +64,15 @@ const doForLobby = (socket, func) => {
 const handleJoinLobby = (socket, data) => {
   leaveAllRooms(socket);
   socket.join(data.lobbyID);
-  idToName[socket.id] = data.name;
+
+  const name = sanitizeString(data.name);
+  idToName[socket.id] = name;
   idToLobby[socket.id] = data.lobbyID;
 
   // Tell everyone in the lobby that someone joined
   doForLobby(socket,
     () => {
-      io.to(data.lobbyID).emit('user join', `${data.name} joined the lobby.`);
+      io.to(data.lobbyID).emit('user join', { lobbyID: data.lobbyID, text: `${name} joined the lobby.` });
     });
 };
 
@@ -83,13 +98,12 @@ const handleLeaveLobby = (socket) => {
   // Tell everyone in the lobby that someone left
   doForLobby(socket,
     () => {
-      io.to(lobby).emit('user leave', `${name} left the lobby.`);
+      io.to(lobby).emit('user leave', { lobbyID: lobby, text: `${name} left the lobby.` });
     });
 
   // Actually leave the room
   leaveAllRooms(socket);
 }
-
 
 
 // Initial set up for the server to handle socket connections

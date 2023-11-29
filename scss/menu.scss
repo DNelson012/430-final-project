@@ -24,7 +24,7 @@ body {
 }
 
 #content {
-  height: 650px;
+  min-height: 650px;
 
   border-top: 1px solid main.$primary;
   border-bottom: 1px solid main.$primary;

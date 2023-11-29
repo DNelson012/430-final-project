@@ -34,3 +34,14 @@ if (process.env.NODE_ENV === 'production') {
 } else {
   module.exports.requiresSecure = bypassSecure;
 }
+
+// Lobby checking
+const requiresLobby = (req, res, next) => {
+  if (!req.body.lobby) {
+    return res.redirect('/menu');
+  }
+
+  return next();
+};
+
+module.exports.requiresLobby = requiresLobby;

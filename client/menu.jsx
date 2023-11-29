@@ -4,6 +4,7 @@ const React = require('react');
 const ReactDOM = require('react-dom');
 
 
+
 // Socket Functions
 const socket = io();
 
@@ -13,13 +14,7 @@ const handleCreateLobby = () => {
   // Check if there was any value given
   if (!lobbyID || !name) { return; }
 
-  // Doing it like this, there should be a check for duplicates
-  // Anyway
   socket.emit('create lobby', { lobbyID, name });
-
-  ReactDOM.render(<LobbyLounge lobbyID={lobbyID} />,
-    document.querySelector('#content'));
-
 
   return;
 }
@@ -32,9 +27,6 @@ const handleJoinLobby = () => {
 
   socket.emit('join lobby', { lobbyID, name });
 
-  ReactDOM.render(<LobbyLounge lobbyID={lobbyID} />,
-    document.querySelector('#content'));
-
   return;
 }
 
@@ -46,6 +38,16 @@ const displayToChat = (text) => {
   const textSpan = document.createElement('span');
   textSpan.innerText = text;
   chat.appendChild(textSpan);
+}
+
+const onUserJoin = (obj) => {
+  ReactDOM.render(<LobbyLounge lobbyID={obj.lobbyID} />,
+    document.querySelector('#content'));
+  displayToChat(obj.text);
+}
+
+const onUserLeave = (obj) => {
+  displayToChat(obj.text);
 }
 
 const leaveLobby = () => {
@@ -151,8 +153,8 @@ const LobbyMenu = (props) => {
 }
 
 const init = () => {
-  socket.on('user join', displayToChat);
-  socket.on('user leave', displayToChat);
+  socket.on('user join', onUserJoin);
+  socket.on('user leave', onUserLeave);
 
   ReactDOM.render(<LobbyMenu />,
     document.querySelector('#content'));

@@ -36,7 +36,7 @@ body {
 }
 
 #content {
-  height: 650px;
+  min-height: 650px;
   border-top: 1px solid #355070;
   border-bottom: 1px solid #355070;
   color: #CC2936;
