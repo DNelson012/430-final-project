@@ -17,7 +17,7 @@ const socketSetup = require('./io.js');
 
 const port = process.env.PORT || process.env.NODE_PORT || 3000;
 
-const dbURI = process.env.MONGODB_URI || 'mongodb://127.0.0.1/AaahMaker';
+const dbURI = process.env.MONGODB_URI || 'mongodb://127.0.0.1/TierGuesser';
 mongoose.connect(dbURI).catch((err) => {
   if (err) {
     console.log('Could not connect to the database');
@@ -40,7 +40,9 @@ redisClient.connect().then(() => {
   app.use(bodyParser.urlencoded({ extended: true }));
   app.use(bodyParser.json());
 
-  app.use(session({
+  // https://socket.io/how-to/use-with-express-session
+  // The start of it at least
+  const sessionMiddleware = session({
     key: 'sessionid',
     store: new RedisStore({
       client: redisClient,
@@ -48,14 +50,15 @@ redisClient.connect().then(() => {
     secret: process.env.SECRET,
     resave: false,
     saveUninitialized: false,
-  }));
+  });
+  app.use(sessionMiddleware);
 
   app.engine('handlebars', expressHandlebars.engine({ defaultLayout: '' }));
   app.set('view engine', 'handlebars');
   app.set('views', `${__dirname}/../views`);
 
   router(app);
-  const server = socketSetup(app);
+  const server = socketSetup(app, sessionMiddleware);
 
   server.listen(port, (err) => {
     if (err) { throw err; }
