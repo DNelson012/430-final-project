@@ -3,10 +3,6 @@ const http = require('http');
 const { Server } = require('socket.io');
 
 let io;
-const idToName = {}; // These are *really* bad
-const idToLobby = {};
-// https://socket.io/how-to/use-with-express-session
-// To set up better state management
 
 // Helpers
 // https://stackoverflow.com/questions/23187013/is-there-a-better-way-to-sanitize-input-with-javascript
@@ -32,12 +28,21 @@ const sanitizeString = (inStr) => {
 //   return result;
 // }
 
+const clearSession = (socket) => {
+  const session = socket.request.session;
+  if (session.name) { delete session.name; }
+  if (session.lobbyID) { delete session.lobbyID; }
+}
+
 // Leave every lobby, if the user is in any
 //  A bit of a nuclear approach, but it should work fine
 const leaveAllRooms = (socket) => {
   socket.rooms.forEach(room => {
     if (room === socket.id) return; // Ignore the socket ID
     socket.leave(room);
+
+    // This is definitely not needed, but for the sake of being thorough
+    clearSession(socket);
   });
 }
 
@@ -93,8 +98,8 @@ const handleLeaveLobby = (socket) => {
   const session = socket.request.session;
   const name = session.name;
   const lobby = session.lobbyID;
-  delete session.name;
-  delete session.lobbyID;
+  // Remove the data
+  clearSession(socket);
 
   // If there is no lobby, don't do anything else
   if (!lobby) { return; }
@@ -120,16 +125,15 @@ const socketSetup = (app, sessionMiddleware) => {
 
   io.on('connection', (socket) => {
     console.log('a user connected');
-    //const session = socket.request.session;
 
     socket.on('disconnect', () => {
       console.log('a user disconnected');
-      handleLeaveLobby(socket);
     });
 
     socket.on('create lobby', (data) => handleCreateLobby(socket, data));
     socket.on('join lobby', (data) => handleJoinLobby(socket, data));
     socket.on('leave lobby', () => handleLeaveLobby(socket));
+    socket.on('disconnecting', () => handleLeaveLobby(socket));
   });
 
   return server;
