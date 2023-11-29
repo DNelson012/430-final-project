@@ -4,10 +4,9 @@
 $primary: #355070;
 $contrast: #CC2936;
 
-$backAlt: #C2F8CB;
-$back: #AFDFB7;
-$backDark: #A1D2B3;
-$backLight: #B3E9C7;
+$back: #B1B1E5;
+$backDark: #8585CB;
+$backLight: #D8D8F6;
 
 @function divMargin($width){
   @return math.div($width, 4);

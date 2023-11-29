@@ -1,5 +1,5 @@
 html {
-  background-color: #A1D2B3;
+  background-color: #8585CB;
 }
 
 body {
@@ -32,7 +32,7 @@ body {
   justify-content: center;
   width: 1000px;
   padding: 40px;
-  background-color: #AFDFB7;
+  background-color: #B1B1E5;
 }
 
 #content {
@@ -52,7 +52,7 @@ should have these rules */
 }
 #content > * button {
   color: #CC2936;
-  background-color: #B3E9C7;
+  background-color: #D8D8F6;
   border: 2px solid #355070;
 }
 #content > * button:hover {
