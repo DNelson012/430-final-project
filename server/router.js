@@ -12,12 +12,6 @@ const router = (app) => {
   app.get('/logout', mid.requiresLogin, controllers.Account.logout);
   app.get('/menu', mid.requiresLogin, controllers.Menu.menuPage);
 
-  // app.get('/getLobby', mid.requiresLogin, controllers.Lobby.getLobby);
-  // app.post('/makeLobby', mid.requiresLogin, controllers.Lobby.makeLobby);
-  // app.post('/addUser', mid.requiresLogin, controllers.Lobby.addUser);
-  // app.post('/removeUser', mid.requiresLogin, controllers.Lobby.removeUser);
-  // app.delete('/deleteLobby', mid.requiresLogin, controllers.Lobby.deleteLobby);
-
   app.get('/*', controllers.notFound);
 };
 

@@ -11,7 +11,7 @@ const socket = io();
 const handleCreateLobby = () => {
   const name = document.querySelector('#displayName').value;
   // Check if there was any value given
-  if (!lobbyID || !name) { return; }
+  if (!name) { return; }
 
   socket.emit('create lobby', { name, numRounds: 3 });
 
@@ -43,11 +43,14 @@ const onUserJoin = (obj) => {
   // This is a bit of a hack, 
   // but if there is an error don't load the page
   if (obj.err) {
-    console.log(text);
+    console.log(obj.text);
   }
 
-  ReactDOM.render(<LobbyLounge lobbyID={obj.lobbyID} />,
-    document.querySelector('#content'));
+  if (!document.querySelector('#lobbyLounge')) {
+    ReactDOM.render(<LobbyLounge lobbyID={obj.lobbyID} host={obj.host} />,
+      document.querySelector('#content'));
+  }
+
   displayToChat(obj.text);
 }
 
@@ -85,6 +88,15 @@ const showCreateLobby = () => {
 
 // React Components
 const LobbyLounge = (props) => {
+  let startButton;
+  if (props.host) {
+    startButton = <button
+      className='buttonLarge'
+      onClick={() => { return; }}>
+      Start
+    </button>;
+  }
+
   return (
     <div id='lobbyLounge'>
       <button
@@ -93,6 +105,7 @@ const LobbyLounge = (props) => {
         Leave Lobby
       </button>
       <span>Waiting in a lobby: {props.lobbyID}</span>
+      {startButton}
       <div id='lobbyChat'></div>
     </div>
   );

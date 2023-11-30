@@ -100,6 +100,7 @@ const handleJoinLobby = async (socket, data) => {
     () => {
       io.to(data.lobbyID).emit('user join', {
         lobbyID: data.lobbyID,
+        host: doc.host === socket.id,
         userCount: doc.userCount,
         numRounds: doc.numRounds,
         text: `${name} joined the lobby.`

@@ -48,6 +48,9 @@ should have these rules */
   button:hover {
     filter: brightness(95%);
   }
+  button:active {
+    filter: brightness(90%);
+  }
 
   label {
     margin: 60px 0 10px;
