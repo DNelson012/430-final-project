@@ -10,11 +10,10 @@ const socket = io();
 
 const handleCreateLobby = () => {
   const name = document.querySelector('#displayName').value;
-  const lobbyID = document.querySelector("#lobbyInput").value;
   // Check if there was any value given
   if (!lobbyID || !name) { return; }
 
-  socket.emit('create lobby', { lobbyID, name });
+  socket.emit('create lobby', { name, numRounds: 3 });
 
   return;
 }
@@ -41,6 +40,12 @@ const displayToChat = (text) => {
 }
 
 const onUserJoin = (obj) => {
+  // This is a bit of a hack, 
+  // but if there is an error don't load the page
+  if (obj.err) {
+    console.log(text);
+  }
+
   ReactDOM.render(<LobbyLounge lobbyID={obj.lobbyID} />,
     document.querySelector('#content'));
   displayToChat(obj.text);
@@ -102,7 +107,7 @@ const LobbyJoin = (props) => {
         Return
       </button>
       <span>Join a lobby</span>
-      <label htmlFor="displayName">Enter a name</label>
+      <label htmlFor="displayName">Enter your name</label>
       <input type="text" name="displayName"
         id="displayName" placeholder='Name' />
       <label htmlFor="lobbyStr">Enter a lobby ID</label>
@@ -127,12 +132,9 @@ const LobbyCreate = (props) => {
         Return
       </button>
       <span>Making a lobby</span>
-      <label htmlFor="displayName">Enter a name</label>
+      <label htmlFor="displayName">Enter your name</label>
       <input type="text" name="displayName"
         id="displayName" placeholder='Name' />
-      <label htmlFor="lobbyStr">Enter a lobby ID</label>
-      <input type="text" name="lobbyStr"
-        id="lobbyInput" placeholder='Lobby ID' />
       <button
         className='buttonLarge'
         id='lobbySubmit'

@@ -1,5 +1,5 @@
 module.exports.Account = require('./Account.js');
-module.exports.Aaah = require('./Aaah.js');
+module.exports.Lobby = require('./Lobby.js');
 module.exports.Menu = require('./Menu.js');
 
 const notFound = (req, res) => {

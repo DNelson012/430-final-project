@@ -37,7 +37,7 @@ if (process.env.NODE_ENV === 'production') {
 
 // Lobby checking
 const requiresLobby = (req, res, next) => {
-  if (!req.body.lobby) {
+  if (!req.session.lobbyID) {
     return res.redirect('/menu');
   }
 

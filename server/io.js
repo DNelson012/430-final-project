@@ -1,6 +1,7 @@
 
 const http = require('http');
 const { Server } = require('socket.io');
+const { Lobby } = require('./models');
 
 let io;
 
@@ -16,17 +17,17 @@ const sanitizeString = (inStr) => {
 }
 
 // https://stackoverflow.com/questions/1349404/generate-random-string-characters-in-javascript
-// function makeID(length) {
-//   let result = '';
-//   const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
-//   const charactersLength = characters.length;
-//   let counter = 0;
-//   while (counter < length) {
-//     result += characters.charAt(Math.floor(Math.random() * charactersLength));
-//     counter += 1;
-//   }
-//   return result;
-// }
+function makeID(length) {
+  let result = '';
+  const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+  const charactersLength = characters.length;
+  let counter = 0;
+  while (counter < length) {
+    result += characters.charAt(Math.floor(Math.random() * charactersLength));
+    counter += 1;
+  }
+  return result;
+}
 
 const clearSession = (socket) => {
   const session = socket.request.session;
@@ -66,9 +67,27 @@ const doForLobby = (socket, func) => {
 // }
 
 // Join the given lobby
-const handleJoinLobby = (socket, data) => {
+const handleJoinLobby = async (socket, data) => {
   leaveAllRooms(socket);
   socket.join(data.lobbyID);
+
+  let doc;
+  try {
+    Lobby.updateOne({ lobbyID: data.lobbyID }, { $inc: { userCount: 1 } }).exec();
+    doc = await Lobby.findOne({ lobbyID: data.lobbyID })
+      .select('lobbyID host userCount numRounds').lean().exec();
+  } catch (err) {
+    console.log(err);
+  }
+
+  // If it didn't work, quit early
+  if (!doc) { 
+    io.to(socket.id).emit('user join', {
+      err: true,
+      text: `Failed to join lobby.`
+    });
+    return;
+  }
 
   // Add data to the session
   const session = socket.request.session;
@@ -79,30 +98,61 @@ const handleJoinLobby = (socket, data) => {
   // Tell everyone in the lobby that someone joined
   doForLobby(socket,
     () => {
-      io.to(data.lobbyID).emit('user join', { lobbyID: data.lobbyID, text: `${name} joined the lobby.` });
+      io.to(data.lobbyID).emit('user join', {
+        lobbyID: data.lobbyID,
+        userCount: doc.userCount,
+        numRounds: doc.numRounds,
+        text: `${name} joined the lobby.`
+      });
     });
 };
 
 // Create & Join the given lobby
-const handleCreateLobby = (socket, data) => {
-  // uhhh, create it? maybe not needed. 
-  //  definitely is, but not yet.
-  // const testID = makeID(4);
+const handleCreateLobby = async (socket, data) => {
+  const lobbyID = makeID(5);
+
+  const lobbyData = {
+    lobbyID: lobbyID,
+    host: socket.id,
+    numRounds: data.numRounds,
+  };
+
+  try {
+    const newLobby = new Lobby(lobbyData);
+    await newLobby.save();
+  } catch (err) {
+    console.log(err);
+    return;
+  }
 
   // Join the newly created lobby
-  handleJoinLobby(socket, data);
+  handleJoinLobby(socket, { lobbyID: lobbyID, name: data.name });
 };
 
-const handleLeaveLobby = (socket) => {
+const handleLeaveLobby = async (socket) => {
   // Get the display name and lobby
   const session = socket.request.session;
   const name = session.name;
   const lobby = session.lobbyID;
-  // Remove the data
-  clearSession(socket);
 
   // If there is no lobby, don't do anything else
   if (!lobby) { return; }
+
+  // Delete the lobby (only happens when host leaves)
+  let doc = await Lobby.findOne({ lobbyID: lobby })
+    .select('host').lean().exec();
+  if (doc.host === socket.id) {
+    doc = await Lobby.deleteOne({ lobbyID: lobby }).lean().exec();
+    if ( doc.acknowledged && doc.deletedCount) {
+      console.log('Lobby deleted');
+    }
+    else {
+      console.log('Failed to delete lobby');
+    }
+  }
+
+  // Remove the session data
+  clearSession(socket);
 
   // Tell everyone in the lobby that someone left
   doForLobby(socket,
@@ -119,7 +169,7 @@ const handleLeaveLobby = (socket) => {
 const socketSetup = (app, sessionMiddleware) => {
   const server = http.createServer(app);
   io = new Server(server);
-  
+
   // ### Express-Socket integration
   io.engine.use(sessionMiddleware);
 
