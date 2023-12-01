@@ -49,6 +49,8 @@ should have these rules */
   flex-flow: column nowrap;
   align-items: center;
   justify-content: center;
+  background-color: #B1B1E5;
+  padding: 20px;
 }
 #content > * button {
   color: #CC2936;
@@ -64,8 +66,10 @@ should have these rules */
 #content > * label {
   margin: 60px 0 10px;
 }
-#content > * input {
+#content > * input, #content > * select {
   width: 160px;
+  color: #355070;
+  background-color: #D8D8F6;
   font-size: 1em;
   text-align: center;
 }
@@ -80,6 +84,11 @@ should have these rules */
   font-size: 0.5em;
   margin: 16px;
   padding: 5px 10px;
+}
+
+.inputSmallWide {
+  font-size: 0.5em !important;
+  width: 100% !important;
 }
 
 #lobbySubmit {

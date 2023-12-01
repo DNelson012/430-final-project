@@ -1,11 +1,17 @@
 
 const helper = require('./helper.js');
 const React = require('react');
+const { useState } = React;
 const ReactDOM = require('react-dom');
 
 
+// These are not stateful variables because this is the client, not the server
+// Though, it still isn't really good to just keep them lying around like this
+let currentLobby;
+let gameUserCount, gameNumRounds, gameTierOptions;
+let gameImageCount;
 
-// Socket Functions
+// Socket Functions - Game setup
 const socket = io();
 
 const handleCreateLobby = () => {
@@ -13,7 +19,18 @@ const handleCreateLobby = () => {
   // Check if there was any value given
   if (!name) { return; }
 
-  socket.emit('create lobby', { name, numRounds: 3 });
+  const numRounds = 3;
+  const tierOptions = [
+    'S____',
+    'A____',
+    'B____',
+    'F____'
+  ];
+  socket.emit('create lobby', { 
+    name, 
+    numRounds, 
+    tierOptions 
+  });
 
   return;
 }
@@ -40,18 +57,27 @@ const displayToChat = (text) => {
 }
 
 const onUserJoin = (obj) => {
-  // This is a bit of a hack, 
-  // but if there is an error don't load the page
-  if (obj.err) {
-    console.log(obj.text);
-  }
-
   if (!document.querySelector('#lobbyLounge')) {
     ReactDOM.render(<LobbyLounge lobbyID={obj.lobbyID} host={obj.host} />,
       document.querySelector('#content'));
   }
-
   displayToChat(obj.text);
+
+  // This is a bit of a hack, 
+  // but don't do anything else if there was an error
+  if (obj.err) {
+    console.log(obj.text);
+    return;
+  }
+
+  // Populate game state variables  
+  currentLobby = obj.lobbyID;
+
+  gameUserCount = obj.userCount;
+  gameNumRounds = obj.numRounds;
+  gameTierOptions = obj.tierOptions;
+  
+  gameImageCount = 0;
 }
 
 const onUserLeave = (obj) => {
@@ -64,6 +90,60 @@ const leaveLobby = () => {
 
   // Render the menu
   showMenu();
+}
+
+
+
+// Socket Functions - Game start
+const hostStartGame = () => {
+  socket.emit('host start');
+}
+
+const onGameStart = () => {
+  ReactDOM.render(<GamePrep />,
+    document.querySelector('#content'));
+}
+
+const handleImageSubmit = () => {
+  const image = document.querySelector('#imageURL').value;
+  const tier = document.querySelector('#tierSelect').value;
+  if (!image || !tier) { return; }
+
+  document.querySelector('#imageSubmit').setAttribute('disabled', "");
+
+  socket.emit('image submit', {
+    image, 
+    tier,
+    lobbyID: currentLobby
+  });
+}
+
+const onImageReceived = () => {
+  gameImageCount++;
+  // This part should be very temporary, until I ask how I should use React
+  document.querySelector('#imgCounter').innerText
+    = `Images: ${gameImageCount}/${gameNumRounds}`;
+  //
+  document.querySelector('#imageURL').value = "";
+  document.querySelector('#tierSelect').value = 1;
+  document.querySelector('#imageSubmit').removeAttribute('disabled');
+
+  // When done, disabled the buttons and whatnot
+  if (gameImageCount === gameNumRounds) {
+    document.querySelector('#imageSubmit').setAttribute('disabled', "");
+    document.querySelector('#imageSubmit').innerText = "Waiting";
+    document.querySelector('#imageURL').setAttribute('disabled', "");
+    document.querySelector('#tierSelect').setAttribute('disabled', "");
+    document.querySelector('#gamePrep').setAttribute('style', "filter: brightness(90%);");
+
+    // This is temporary, just to demonstrate for a mock up
+    onImagesFinished();
+  }
+}
+
+const onImagesFinished = () => {
+  ReactDOM.render(<GameRounds />,
+    document.querySelector('#content'));
 }
 
 
@@ -86,13 +166,13 @@ const showCreateLobby = () => {
 
 
 
-// React Components
+// React Components - Lobby
 const LobbyLounge = (props) => {
   let startButton;
   if (props.host) {
     startButton = <button
       className='buttonLarge'
-      onClick={() => { return; }}>
+      onClick={hostStartGame}>
       Start
     </button>;
   }
@@ -167,9 +247,94 @@ const LobbyMenu = (props) => {
   );
 }
 
+
+
+// React Components - Game
+const GamePrep = (props) => {
+  // Set up state watching for the image count
+  // const [imgNum, setImgNum] = useState(props.imgNum);
+
+  // Populate the tier select input
+  let optionsArr = [];
+  let count = 0;
+  gameTierOptions.forEach((elem) => {
+    count++;
+    optionsArr.push(<option value={count}> {elem} </option>);
+  });
+  const tierSelect =
+    <select name="tierSelect" id="tierSelect">
+      {optionsArr}
+    </select>;
+  //
+
+  return (
+    <div id='gamePrep'>
+      <span>Submit your images and corresponding tiers</span>
+      <span id='imgCounter'>Images: {gameImageCount}/{gameNumRounds}</span>
+      <label htmlFor="imageURL">Enter a URL for an image</label>
+      <input className='inputSmallWide' type="url" name="imageURL"
+        id="imageURL" placeholder='URL' />
+      <label htmlFor="tierSelect">Select a tier</label>
+      {tierSelect}
+      <button
+        className='buttonLarge'
+        id='imageSubmit'
+        onClick={handleImageSubmit}>
+        Submit
+      </button>
+    </div>
+  );
+}
+
+
+const GameRounds = (props) => {
+  // Populate the tier select input
+  let optionsArr = [];
+  let count = 0;
+  gameTierOptions.forEach((elem) => {
+    count++;
+    optionsArr.push(<option value={count}> {elem} </option>);
+  });
+  const tierSelect =
+    <select name="tierSelect" id="tierSelect">
+      {optionsArr}
+    </select>;
+
+  // Populate players
+  // let playersArr = [];
+  // for (let i = 0; i < 5; i++) {
+  //   playersArr.push(<span>Player {i+1}: -name- ~ Guess: -tier-</span>);
+  // }
+
+  return (
+    <div id='gameRounds'>
+      <span>What did Player ___ rank this?</span>
+      <span>Image goes here</span>
+      <span>Other guesses:</span>
+      <span>Player 1: -name- ~ Guess: -tier-</span>
+      <span>Player 2: -name- ~ Guess: -tier-</span>
+      <span>Player 3: -name- ~ Guess: -tier-</span>
+      <span>Player 4: -name- ~ Guess: -tier-</span>
+      <label htmlFor="tierSelect">Select a tier</label>
+      {tierSelect}
+      <button
+        className='buttonLarge'
+        id='imageSubmit'>
+        Guess
+      </button>
+    </div>
+  );
+}
+
+
+
+// Initialization
 const init = () => {
   socket.on('user join', onUserJoin);
   socket.on('user leave', onUserLeave);
+
+  socket.on('game start', onGameStart);
+  socket.on('image received', onImageReceived);
 
   ReactDOM.render(<LobbyMenu />,
     document.querySelector('#content'));

@@ -27,6 +27,10 @@ const LobbySchema = new mongoose.Schema({
     min: 1,
     required: true,
   },
+  tierOptions: {
+    type: Array,
+    required: true,
+  },
   createdDate: {
     type: Date,
     default: Date.now(),
@@ -37,6 +41,7 @@ LobbySchema.statics.toAPI = (doc) => ({
   lobbyID: doc.lobbyID,
   host: doc.host,
   numRounds: doc.numRounds,
+  tierOptions: doc.tierOptions,
 });
 
 const LobbyModel = mongoose.model('Lobby', LobbySchema);

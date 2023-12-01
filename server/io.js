@@ -1,7 +1,7 @@
 
 const http = require('http');
 const { Server } = require('socket.io');
-const { Lobby } = require('./models');
+const { Lobby, Image } = require('./models');
 
 let io;
 
@@ -60,13 +60,27 @@ const doForLobby = (socket, func) => {
   });
 }
 
+const deleteLobby = async (lobbyID) => {
+  let doc = await Lobby.deleteOne({ lobbyID }).lean().exec();
+  if (doc.acknowledged && doc.deletedCount) {
+    console.log('Lobby deleted');
+  }
+  else {
+    console.log('Failed to delete lobby');
+  }
+  
+  doc = await Image.deleteMany({ lobbyID }).lean().exec();
+  if (doc.acknowledged) {
+    console.log(`Deleted ${doc.deletedCount} images`);
+  }
+  else {
+    console.log('Failed to delete lobby');
+  }
+}
 
 
-// const updatePlayerList = (socket, data) => {
 
-// }
-
-// Join the given lobby
+// Lobby setup
 const handleJoinLobby = async (socket, data) => {
   leaveAllRooms(socket);
   socket.join(data.lobbyID);
@@ -75,7 +89,7 @@ const handleJoinLobby = async (socket, data) => {
   try {
     Lobby.updateOne({ lobbyID: data.lobbyID }, { $inc: { userCount: 1 } }).exec();
     doc = await Lobby.findOne({ lobbyID: data.lobbyID })
-      .select('lobbyID host userCount numRounds').lean().exec();
+      .select('lobbyID host userCount numRounds tierOptions').lean().exec();
   } catch (err) {
     console.log(err);
   }
@@ -103,6 +117,7 @@ const handleJoinLobby = async (socket, data) => {
         host: doc.host === socket.id,
         userCount: doc.userCount,
         numRounds: doc.numRounds,
+        tierOptions: doc.tierOptions,
         text: `${name} joined the lobby.`
       });
     });
@@ -116,6 +131,7 @@ const handleCreateLobby = async (socket, data) => {
     lobbyID: lobbyID,
     host: socket.id,
     numRounds: data.numRounds,
+    tierOptions: data.tierOptions,
   };
 
   try {
@@ -140,16 +156,9 @@ const handleLeaveLobby = async (socket) => {
   if (!lobby) { return; }
 
   // Delete the lobby (only happens when host leaves)
-  let doc = await Lobby.findOne({ lobbyID: lobby })
-    .select('host').lean().exec();
-  if (doc.host === socket.id) {
-    doc = await Lobby.deleteOne({ lobbyID: lobby }).lean().exec();
-    if ( doc.acknowledged && doc.deletedCount) {
-      console.log('Lobby deleted');
-    }
-    else {
-      console.log('Failed to delete lobby');
-    }
+  let doc = await Lobby.findOne({ lobbyID: lobby }).select('host').lean().exec();
+  if (doc && doc.host === socket.id) {
+    deleteLobby(lobby);
   }
 
   // Remove the session data
@@ -164,6 +173,40 @@ const handleLeaveLobby = async (socket) => {
   // Actually leave the room
   leaveAllRooms(socket);
 }
+
+
+
+// Game Functions - Start
+const handleHostStart = (socket) => {
+  // Get the lobby
+  const session = socket.request.session;
+  const lobby = session.lobbyID;
+
+  // Tell everyone that the game is starting
+  doForLobby(socket,
+    () => {
+      io.to(lobby).emit('game start', { lobbyID: lobby });
+    });
+}
+
+const handleImageSubmit = async (socket, data) => {
+  const imageData = {
+    lobbyID: data.lobbyID,
+    image: data.image,
+    tier: data.tier,
+  };
+
+  try {
+    const newImage = new Image(imageData);
+    await newImage.save();
+  } catch (err) {
+    console.log(err);
+    return;
+  }
+
+  io.to(socket.id).emit('image received');
+}
+
 
 
 // Initial set up for the server to handle socket connections
@@ -185,6 +228,9 @@ const socketSetup = (app, sessionMiddleware) => {
     socket.on('join lobby', (data) => handleJoinLobby(socket, data));
     socket.on('leave lobby', () => handleLeaveLobby(socket));
     socket.on('disconnecting', () => handleLeaveLobby(socket));
+
+    socket.on('host start', () => {handleHostStart(socket)})
+    socket.on('image submit', (data) => {handleImageSubmit(socket, data)})
   });
 
   return server;
