@@ -108,6 +108,16 @@ should have these rules */
   display: block;
 }
 
+#gameRounds #playerGuesses {
+  display: flex;
+  flex-flow: row nowrap;
+  align-items: center;
+  justify-content: center;
+}
+#gameRounds #playerGuesses span {
+  display: block;
+}
+
 #side {
   position: absolute;
   top: 0px;

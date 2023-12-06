@@ -1,4 +1,3 @@
-
 const http = require('http');
 const { Server } = require('socket.io');
 const { Lobby, Image } = require('./models');
@@ -8,13 +7,13 @@ let io;
 // Helpers
 // https://stackoverflow.com/questions/23187013/is-there-a-better-way-to-sanitize-input-with-javascript
 const sanitizeString = (inStr) => {
-  let str = inStr
-  str = str.replace(/[^a-z0-9áéíóúñü .,_-]/gim, "");
+  let str = inStr;
+  str = str.replace(/[^a-z0-9áéíóúñü .,_-]/gim, '');
   return str.trim();
-  // If this is taking in URLs, 
+  // If this is taking in URLs,
   // I can do this on individual segments between '/' characters
   //  And also discard anything past '?' on the last segment
-}
+};
 
 // https://stackoverflow.com/questions/1349404/generate-random-string-characters-in-javascript
 function makeID(length) {
@@ -29,56 +28,55 @@ function makeID(length) {
   return result;
 }
 
+// Clears any data that was added to the user's session
 const clearSession = (socket) => {
-  const session = socket.request.session;
+  const { session } = socket.request;
   if (session.name) { delete session.name; }
   if (session.lobbyID) { delete session.lobbyID; }
-}
+};
 
 // Leave every lobby, if the user is in any
 //  A bit of a nuclear approach, but it should work fine
 const leaveAllRooms = (socket) => {
-  socket.rooms.forEach(room => {
+  socket.rooms.forEach((room) => {
     if (room === socket.id) return; // Ignore the socket ID
     socket.leave(room);
 
     // This is definitely not needed, but for the sake of being thorough
     clearSession(socket);
   });
-}
+};
 
 // Call a function only for members of a given lobby
-const doForLobby = (socket, func) => {
-  // If there are no rooms, it says zero
-  //  This is bad when I want that id room
-  //  So this calls it immediately if the id is the only room
-  if (socket.rooms.size === 0) { func(); }
-  socket.rooms.forEach(room => {
-    if (room === socket.id) return;
+//  Might not actually be that useful
+// const doForLobby = (socket, func) => {
+//   // If there are no rooms, it says zero
+//   //  This is bad when I want that id room
+//   //  So this calls it immediately if the id is the only room
+//   if (socket.rooms.size === 0) { func(); }
+//   socket.rooms.forEach(room => {
+//     if (room === socket.id) return;
 
-    func()
-  });
-}
+//     func()
+//   });
+// }
 
+// Deletes everything related to a lobby from the database
 const deleteLobby = async (lobbyID) => {
   let doc = await Lobby.deleteOne({ lobbyID }).lean().exec();
   if (doc.acknowledged && doc.deletedCount) {
     console.log('Lobby deleted');
-  }
-  else {
+  } else {
     console.log('Failed to delete lobby');
   }
-  
+
   doc = await Image.deleteMany({ lobbyID }).lean().exec();
   if (doc.acknowledged) {
     console.log(`Deleted ${doc.deletedCount} images`);
-  }
-  else {
+  } else {
     console.log('Failed to delete lobby');
   }
-}
-
-
+};
 
 // Lobby setup
 const handleJoinLobby = async (socket, data) => {
@@ -87,7 +85,7 @@ const handleJoinLobby = async (socket, data) => {
 
   let doc;
   try {
-    Lobby.updateOne({ lobbyID: data.lobbyID }, { $inc: { userCount: 1 } }).exec();
+    await Lobby.updateOne({ lobbyID: data.lobbyID }, { $inc: { userCount: 1 } }).exec();
     doc = await Lobby.findOne({ lobbyID: data.lobbyID })
       .select('lobbyID host userCount numRounds tierOptions').lean().exec();
   } catch (err) {
@@ -95,32 +93,29 @@ const handleJoinLobby = async (socket, data) => {
   }
 
   // If it didn't work, quit early
-  if (!doc) { 
+  if (!doc) {
     io.to(socket.id).emit('user join', {
       err: true,
-      text: `Failed to join lobby.`
+      text: 'Failed to join lobby.',
     });
     return;
   }
 
   // Add data to the session
-  const session = socket.request.session;
+  const { session } = socket.request;
   const name = sanitizeString(data.name);
   session.name = name;
   session.lobbyID = data.lobbyID;
 
   // Tell everyone in the lobby that someone joined
-  doForLobby(socket,
-    () => {
-      io.to(data.lobbyID).emit('user join', {
-        lobbyID: data.lobbyID,
-        host: doc.host === socket.id,
-        userCount: doc.userCount,
-        numRounds: doc.numRounds,
-        tierOptions: doc.tierOptions,
-        text: `${name} joined the lobby.`
-      });
-    });
+  io.to(data.lobbyID).emit('user join', {
+    lobbyID: data.lobbyID,
+    host: doc.host === socket.id,
+    userCount: doc.userCount,
+    numRounds: doc.numRounds,
+    tierOptions: doc.tierOptions,
+    text: `${name} joined the lobby.`,
+  });
 };
 
 // Create & Join the given lobby
@@ -128,7 +123,7 @@ const handleCreateLobby = async (socket, data) => {
   const lobbyID = makeID(5);
 
   const lobbyData = {
-    lobbyID: lobbyID,
+    lobbyID,
     host: socket.id,
     numRounds: data.numRounds,
     tierOptions: data.tierOptions,
@@ -143,20 +138,20 @@ const handleCreateLobby = async (socket, data) => {
   }
 
   // Join the newly created lobby
-  handleJoinLobby(socket, { lobbyID: lobbyID, name: data.name });
+  handleJoinLobby(socket, { lobbyID, name: data.name });
 };
 
 const handleLeaveLobby = async (socket) => {
   // Get the display name and lobby
-  const session = socket.request.session;
-  const name = session.name;
+  const { session } = socket.request;
+  const { name } = session;
   const lobby = session.lobbyID;
 
   // If there is no lobby, don't do anything else
   if (!lobby) { return; }
 
   // Delete the lobby (only happens when host leaves)
-  let doc = await Lobby.findOne({ lobbyID: lobby }).select('host').lean().exec();
+  const doc = await Lobby.findOne({ lobbyID: lobby }).select('host').lean().exec();
   if (doc && doc.host === socket.id) {
     deleteLobby(lobby);
   }
@@ -165,33 +160,32 @@ const handleLeaveLobby = async (socket) => {
   clearSession(socket);
 
   // Tell everyone in the lobby that someone left
-  doForLobby(socket,
-    () => {
-      io.to(lobby).emit('user leave', { lobbyID: lobby, text: `${name} left the lobby.` });
-    });
+  io.to(lobby).emit('user leave', { lobbyID: lobby, text: `${name} left the lobby.` });
 
   // Actually leave the room
   leaveAllRooms(socket);
-}
-
-
+};
 
 // Game Functions - Start
 const handleHostStart = (socket) => {
   // Get the lobby
-  const session = socket.request.session;
+  const { session } = socket.request;
   const lobby = session.lobbyID;
 
   // Tell everyone that the game is starting
-  doForLobby(socket,
-    () => {
-      io.to(lobby).emit('game start', { lobbyID: lobby });
-    });
-}
+  io.to(lobby).emit('game start', { lobbyID: lobby });
+};
 
 const handleImageSubmit = async (socket, data) => {
+  // Get the display name and lobby
+  const { session } = socket.request;
+  const { name } = session;
+  const lobby = session.lobbyID;
+
   const imageData = {
-    lobbyID: data.lobbyID,
+    lobbyID: lobby,
+    ownerID: socket.id,
+    ownerName: name,
     image: data.image,
     tier: data.tier,
   };
@@ -205,9 +199,44 @@ const handleImageSubmit = async (socket, data) => {
   }
 
   io.to(socket.id).emit('image received');
-}
+};
 
+const handleNextRound = async (socket) => {
+  // Get the lobby
+  const { session } = socket.request;
+  const lobby = session.lobbyID;
 
+  // https://stackoverflow.com/questions/2824157/how-can-i-get-a-random-record-from-mongodb
+  let doc
+  try {
+    await Lobby.updateOne({ lobbyID: lobby }, { $inc: { usersReady: 1 } }).exec();
+    doc = await Lobby.findOne({ lobbyID: lobby })
+      .select('userCount usersReady').lean().exec();
+  } catch (err) {
+    console.log(err);
+  }
+};
+
+const handleImagesFinished = async (socket) => {
+  // Get the lobby
+  const { session } = socket.request;
+  const lobby = session.lobbyID;  
+
+  let doc;
+  try {
+    await Lobby.updateOne({ lobbyID: lobby }, { $inc: { usersReady: 1 } }).exec();
+    doc = await Lobby.findOne({ lobbyID: lobby })
+      .select('userCount usersReady').lean().exec();
+  } catch (err) {
+    console.log(err);
+  }
+
+  // If all players have finished, start the game rounds
+  if (doc.userCount === doc.usersReady) {
+    await io.to(lobby).emit('rounds ready', { lobbyID: lobby });
+    handleNextRound(socket);
+  }
+};
 
 // Initial set up for the server to handle socket connections
 const socketSetup = (app, sessionMiddleware) => {
@@ -229,8 +258,9 @@ const socketSetup = (app, sessionMiddleware) => {
     socket.on('leave lobby', () => handleLeaveLobby(socket));
     socket.on('disconnecting', () => handleLeaveLobby(socket));
 
-    socket.on('host start', () => {handleHostStart(socket)})
-    socket.on('image submit', (data) => {handleImageSubmit(socket, data)})
+    socket.on('host start', () => handleHostStart(socket));
+    socket.on('image submit', (data) => handleImageSubmit(socket, data));
+    socket.on('images finished', () => handleImagesFinished(socket));
   });
 
   return server;

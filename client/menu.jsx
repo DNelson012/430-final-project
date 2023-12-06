@@ -113,8 +113,7 @@ const handleImageSubmit = () => {
 
   socket.emit('image submit', {
     image, 
-    tier,
-    lobbyID: currentLobby
+    tier
   });
 }
 
@@ -136,12 +135,11 @@ const onImageReceived = () => {
     document.querySelector('#tierSelect').setAttribute('disabled', "");
     document.querySelector('#gamePrep').setAttribute('style', "filter: brightness(90%);");
 
-    // This is temporary, just to demonstrate for a mock up
-    onImagesFinished();
+    socket.emit('images finished');
   }
 }
 
-const onImagesFinished = () => {
+const onRoundsReady = () => {
   ReactDOM.render(<GameRounds />,
     document.querySelector('#content'));
 }
@@ -299,22 +297,26 @@ const GameRounds = (props) => {
     <select name="tierSelect" id="tierSelect">
       {optionsArr}
     </select>;
+  //
 
   // Populate players
-  // let playersArr = [];
-  // for (let i = 0; i < 5; i++) {
-  //   playersArr.push(<span>Player {i+1}: -name- ~ Guess: -tier-</span>);
-  // }
+  let playersArr = [];
+  for (let i = 0; i < 5; i++) {
+    // playersArr.push(<span>Player {i+1}: -name- ~ Guess: -tier-</span>);
+    playersArr.push(<span> Player {i+1}: name, Guess: tier </span>);
+  }
+  const playerGuesses =
+    <div id="playerGuesses">
+      {playersArr}
+    </div>;
+  //
 
   return (
     <div id='gameRounds'>
       <span>What did Player ___ rank this?</span>
       <span>Image goes here</span>
       <span>Other guesses:</span>
-      <span>Player 1: -name- ~ Guess: -tier-</span>
-      <span>Player 2: -name- ~ Guess: -tier-</span>
-      <span>Player 3: -name- ~ Guess: -tier-</span>
-      <span>Player 4: -name- ~ Guess: -tier-</span>
+      {playerGuesses}
       <label htmlFor="tierSelect">Select a tier</label>
       {tierSelect}
       <button
@@ -335,6 +337,7 @@ const init = () => {
 
   socket.on('game start', onGameStart);
   socket.on('image received', onImageReceived);
+  socket.on('rounds ready', onRoundsReady);
 
   ReactDOM.render(<LobbyMenu />,
     document.querySelector('#content'));
