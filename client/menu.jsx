@@ -8,6 +8,7 @@ const ReactDOM = require('react-dom');
 // These are not stateful variables because this is the client, not the server
 // Though, it still isn't really good to just keep them lying around like this
 let currentLobby;
+let lobbyUsers = [];
 let gameUserCount, gameNumRounds, gameTierOptions;
 let gameImageCount;
 
@@ -70,6 +71,12 @@ const onUserJoin = (obj) => {
     return;
   }
 
+  console.log(obj.user);
+  // The host keeps track of the users
+  if (obj.host) {
+    lobbyUsers.push(obj.user);
+  }
+
   // Populate game state variables  
   currentLobby = obj.lobbyID;
 
@@ -96,15 +103,17 @@ const leaveLobby = () => {
 
 // Socket Functions - Game start
 const hostStartGame = () => {
-  socket.emit('host start');
+  socket.emit('host start', lobbyUsers);
 }
 
-const onGameStart = () => {
+const onGameStart = (userArr) => {
+  lobbyUsers = userArr;
   ReactDOM.render(<GamePrep />,
     document.querySelector('#content'));
 }
 
 const handleImageSubmit = () => {
+  console.log(lobbyUsers);
   const image = document.querySelector('#imageURL').value;
   const tier = document.querySelector('#tierSelect').value;
   if (!image || !tier) { return; }
@@ -140,7 +149,14 @@ const onImageReceived = () => {
 }
 
 const onRoundsReady = () => {
-  ReactDOM.render(<GameRounds />,
+  // ReactDOM.render(<GameRounds />,
+  //   document.querySelector('#content'));
+}
+
+const onNextRound = (obj) => {
+  const { ownerID, ownerName, image, tier } = obj;
+
+  ReactDOM.render(<GameRounds name={ownerName} imgSrc={image} tier={tier} />,
     document.querySelector('#content'));
 }
 
@@ -338,6 +354,7 @@ const init = () => {
   socket.on('game start', onGameStart);
   socket.on('image received', onImageReceived);
   socket.on('rounds ready', onRoundsReady);
+  socket.on('next round', onNextRound)
 
   ReactDOM.render(<LobbyMenu />,
     document.querySelector('#content'));

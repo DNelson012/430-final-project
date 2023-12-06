@@ -115,6 +115,7 @@ const handleJoinLobby = async (socket, data) => {
     numRounds: doc.numRounds,
     tierOptions: doc.tierOptions,
     text: `${name} joined the lobby.`,
+    user: { name: name, id: socket.id },
   });
 };
 
@@ -167,13 +168,13 @@ const handleLeaveLobby = async (socket) => {
 };
 
 // Game Functions - Start
-const handleHostStart = (socket) => {
+const handleHostStart = (socket, userArr) => {
   // Get the lobby
   const { session } = socket.request;
   const lobby = session.lobbyID;
 
   // Tell everyone that the game is starting
-  io.to(lobby).emit('game start', { lobbyID: lobby });
+  io.to(lobby).emit('game start', userArr);
 };
 
 const handleImageSubmit = async (socket, data) => {
@@ -209,12 +210,17 @@ const handleNextRound = async (socket) => {
   // https://stackoverflow.com/questions/2824157/how-can-i-get-a-random-record-from-mongodb
   let doc
   try {
-    await Lobby.updateOne({ lobbyID: lobby }, { $inc: { usersReady: 1 } }).exec();
-    doc = await Lobby.findOne({ lobbyID: lobby })
-      .select('userCount usersReady').lean().exec();
+    doc = await Image.aggregate([{$match: { lobbyID: lobby }}, { $sample: { size: 1 } }]).exec();
   } catch (err) {
     console.log(err);
   }
+  
+  io.to(lobby).emit('next round', {
+    ownerID: doc[0].ownerID,
+    ownerName: doc[0].ownerName,
+    image: doc[0].image,
+    tier: doc[0].tier,
+  });
 };
 
 const handleImagesFinished = async (socket) => {
@@ -238,6 +244,8 @@ const handleImagesFinished = async (socket) => {
   }
 };
 
+
+
 // Initial set up for the server to handle socket connections
 const socketSetup = (app, sessionMiddleware) => {
   const server = http.createServer(app);
@@ -258,7 +266,7 @@ const socketSetup = (app, sessionMiddleware) => {
     socket.on('leave lobby', () => handleLeaveLobby(socket));
     socket.on('disconnecting', () => handleLeaveLobby(socket));
 
-    socket.on('host start', () => handleHostStart(socket));
+    socket.on('host start', (userArr) => handleHostStart(socket, userArr));
     socket.on('image submit', (data) => handleImageSubmit(socket, data));
     socket.on('images finished', () => handleImagesFinished(socket));
   });
