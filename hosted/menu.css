@@ -114,8 +114,17 @@ should have these rules */
   align-items: center;
   justify-content: center;
 }
-#gameRounds #playerGuesses span {
+#gameRounds #playerGuesses .playerGuess {
+  max-width: 350px;
   display: block;
+}
+#gameRounds #playerGuesses .playerGuess p {
+  margin: 0 0 16px;
+}
+#gameRounds img {
+  margin: 20px 0;
+  max-width: 900px;
+  max-height: 600px;
 }
 
 #side {

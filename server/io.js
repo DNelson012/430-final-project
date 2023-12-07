@@ -115,7 +115,7 @@ const handleJoinLobby = async (socket, data) => {
     numRounds: doc.numRounds,
     tierOptions: doc.tierOptions,
     text: `${name} joined the lobby.`,
-    user: { name: name, id: socket.id },
+    user: { name, id: socket.id },
   });
 };
 
@@ -208,13 +208,13 @@ const handleNextRound = async (socket) => {
   const lobby = session.lobbyID;
 
   // https://stackoverflow.com/questions/2824157/how-can-i-get-a-random-record-from-mongodb
-  let doc
+  let doc;
   try {
-    doc = await Image.aggregate([{$match: { lobbyID: lobby }}, { $sample: { size: 1 } }]).exec();
+    doc = await Image.aggregate([{ $match: { lobbyID: lobby } }, { $sample: { size: 1 } }]).exec();
   } catch (err) {
     console.log(err);
   }
-  
+
   io.to(lobby).emit('next round', {
     ownerID: doc[0].ownerID,
     ownerName: doc[0].ownerName,
@@ -226,7 +226,7 @@ const handleNextRound = async (socket) => {
 const handleImagesFinished = async (socket) => {
   // Get the lobby
   const { session } = socket.request;
-  const lobby = session.lobbyID;  
+  const lobby = session.lobbyID;
 
   let doc;
   try {
@@ -239,12 +239,11 @@ const handleImagesFinished = async (socket) => {
 
   // If all players have finished, start the game rounds
   if (doc.userCount === doc.usersReady) {
+    Lobby.updateOne({ lobbyID: lobby }, { usersReady: 0 }).exec();
     await io.to(lobby).emit('rounds ready', { lobbyID: lobby });
     handleNextRound(socket);
   }
 };
-
-
 
 // Initial set up for the server to handle socket connections
 const socketSetup = (app, sessionMiddleware) => {

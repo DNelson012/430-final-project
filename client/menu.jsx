@@ -7,8 +7,7 @@ const ReactDOM = require('react-dom');
 
 // These are not stateful variables because this is the client, not the server
 // Though, it still isn't really good to just keep them lying around like this
-let currentLobby;
-let lobbyUsers = [];
+let isHost, lobbyUsers;
 let gameUserCount, gameNumRounds, gameTierOptions;
 let gameImageCount;
 
@@ -22,11 +21,15 @@ const handleCreateLobby = () => {
 
   const numRounds = 3;
   const tierOptions = [
-    'S____',
-    'A____',
-    'B____',
-    'F____'
+    'S',
+    'A',
+    'B',
+    'F'
   ];
+  
+  isHost = true;
+  lobbyUsers = {};
+
   socket.emit('create lobby', { 
     name, 
     numRounds, 
@@ -41,6 +44,9 @@ const handleJoinLobby = () => {
   const lobbyID = document.querySelector("#lobbyInput").value;
   // Check if there was any value given
   if (!lobbyID || !name) { return; }
+
+  isHost = false;
+  lobbyUsers = {};
 
   socket.emit('join lobby', { lobbyID, name });
 
@@ -71,15 +77,12 @@ const onUserJoin = (obj) => {
     return;
   }
 
-  console.log(obj.user);
   // The host keeps track of the users
-  if (obj.host) {
-    lobbyUsers.push(obj.user);
+  if (isHost) {
+    lobbyUsers[obj.user.id] = obj.user.name;
   }
 
-  // Populate game state variables  
-  currentLobby = obj.lobbyID;
-
+  // Populate game state variables 
   gameUserCount = obj.userCount;
   gameNumRounds = obj.numRounds;
   gameTierOptions = obj.tierOptions;
@@ -113,7 +116,6 @@ const onGameStart = (userArr) => {
 }
 
 const handleImageSubmit = () => {
-  console.log(lobbyUsers);
   const image = document.querySelector('#imageURL').value;
   const tier = document.querySelector('#tierSelect').value;
   if (!image || !tier) { return; }
@@ -317,9 +319,13 @@ const GameRounds = (props) => {
 
   // Populate players
   let playersArr = [];
-  for (let i = 0; i < 5; i++) {
-    // playersArr.push(<span>Player {i+1}: -name- ~ Guess: -tier-</span>);
-    playersArr.push(<span> Player {i+1}: name, Guess: tier </span>);
+  const userKeys = Object.keys(lobbyUsers);
+  for (let i = 0; i < userKeys.length; i++) {
+    playersArr.push(
+      <div className='playerGuess'>
+        <p> {lobbyUsers[userKeys[i]]}, </p>
+        <p> Guess: tier </p>
+      </div>);
   }
   const playerGuesses =
     <div id="playerGuesses">
@@ -327,11 +333,13 @@ const GameRounds = (props) => {
     </div>;
   //
 
+  // name={ownerName} imgSrc={image} tier={tier}
+
   return (
     <div id='gameRounds'>
-      <span>What did Player ___ rank this?</span>
-      <span>Image goes here</span>
-      <span>Other guesses:</span>
+      <span>What did {props.name} rank this?</span>
+      <img crossorigin="anonymous" src={props.imgSrc} alt="tier image" />
+      <span>Players:</span>
       {playerGuesses}
       <label htmlFor="tierSelect">Select a tier</label>
       {tierSelect}
