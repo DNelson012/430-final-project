@@ -10,6 +10,40 @@ const ReactDOM = require('react-dom');
 let isHost, lobbyUsers;
 let gameUserCount, gameNumRounds, gameTierOptions;
 let gameImageCount;
+let tierGuesses, imageOwner;
+
+
+// Helper Functions
+//  Some of these need to be above
+//  both the socket and react function,
+//  so they'll go here
+const createPlayerGuesses = (ownerID) => {
+  let playersArr = [];
+  const userKeys = Object.keys(lobbyUsers);
+  for (let i = 0; i < userKeys.length; i++) {
+    let classes;
+    if (tierGuesses[userKeys[i]]) {
+      classes = 'playerGuess darken'
+    } else {
+      classes = 'playerGuess'
+    }
+
+    // The linter does not allow continue statements
+    // and I shed a tear each time I'm forced to if instead
+    if (userKeys[i] !== ownerID) {
+      playersArr.push(
+        <div className={classes}>
+          <p> {lobbyUsers[userKeys[i]]}, </p>
+          <p> Guess: tier </p>
+        </div>);
+    }
+  }
+
+  console.log(playersArr);
+  return playersArr;
+}
+
+
 
 // Socket Functions - Game setup
 const socket = io();
@@ -144,7 +178,7 @@ const onImageReceived = () => {
     document.querySelector('#imageSubmit').innerText = "Waiting";
     document.querySelector('#imageURL').setAttribute('disabled', "");
     document.querySelector('#tierSelect').setAttribute('disabled', "");
-    document.querySelector('#gamePrep').setAttribute('style', "filter: brightness(90%);");
+    document.querySelector('#gamePrep').classList.add("darken");
 
     socket.emit('images finished');
   }
@@ -157,9 +191,30 @@ const onRoundsReady = () => {
 
 const onNextRound = (obj) => {
   const { ownerID, ownerName, image, tier } = obj;
+  tierGuesses = {};
+  imageOwner = ownerID;
 
   ReactDOM.render(<GameRounds name={ownerName} imgSrc={image} tier={tier} />,
     document.querySelector('#content'));
+}
+
+const handleGuess = () => {
+  const tier = document.querySelector('#tierSelect').value;
+
+  socket.emit('guess given', {
+    tier,
+  });
+
+  document.querySelector('#guessSubmit').setAttribute('disabled', "");
+  document.querySelector('#guessSubmit').innerText = "Waiting";
+  document.querySelector('#tierSelect').setAttribute('disabled', "");
+}
+
+const onGuessMade = (obj) => {
+  tierGuesses[obj.id] = obj.guess;
+
+  const playersArr = createPlayerGuesses(imageOwner);
+  console.log(playersArr);
 }
 
 
@@ -216,12 +271,12 @@ const LobbyJoin = (props) => {
         Return
       </button>
       <span>Join a lobby</span>
-      <label htmlFor="displayName">Enter your name</label>
-      <input type="text" name="displayName"
-        id="displayName" placeholder='Name' />
       <label htmlFor="lobbyStr">Enter a lobby ID</label>
       <input type="text" name="lobbyStr"
         id="lobbyInput" placeholder='Lobby ID' />
+      <label htmlFor="displayName">Enter your name</label>
+      <input type="text" name="displayName"
+        id="displayName" placeholder='Name' />
       <button
         className='buttonLarge'
         id='lobbySubmit'
@@ -318,34 +373,38 @@ const GameRounds = (props) => {
   //
 
   // Populate players
-  let playersArr = [];
-  const userKeys = Object.keys(lobbyUsers);
-  for (let i = 0; i < userKeys.length; i++) {
-    playersArr.push(
-      <div className='playerGuess'>
-        <p> {lobbyUsers[userKeys[i]]}, </p>
-        <p> Guess: tier </p>
-      </div>);
-  }
-  const playerGuesses =
+  // let playersArr = [];
+  // const userKeys = Object.keys(lobbyUsers);
+  // for (let i = 0; i < userKeys.length; i++) {
+  //   playersArr.push(
+  //     <div className='playerGuess'>
+  //       <p> {lobbyUsers[userKeys[i]]}, </p>
+  //       <p> Guess: tier </p>
+  //     </div>);
+  // }
+  const playersArr = createPlayerGuesses(imageOwner);
+  const playerGuesses = 
     <div id="playerGuesses">
       {playersArr}
     </div>;
-  //
+  
 
   // name={ownerName} imgSrc={image} tier={tier}
 
   return (
     <div id='gameRounds'>
       <span>What did {props.name} rank this?</span>
-      <img crossorigin="anonymous" src={props.imgSrc} alt="tier image" />
+      <img crossorigin="anonymous"
+        src={props.imgSrc}
+        alt="If you can read this, you gave a bad link." />
       <span>Players:</span>
       {playerGuesses}
       <label htmlFor="tierSelect">Select a tier</label>
       {tierSelect}
       <button
         className='buttonLarge'
-        id='imageSubmit'>
+        id='guessSubmit'
+        onClick={handleGuess}>
         Guess
       </button>
     </div>
@@ -363,6 +422,7 @@ const init = () => {
   socket.on('image received', onImageReceived);
   socket.on('rounds ready', onRoundsReady);
   socket.on('next round', onNextRound)
+  socket.on('guess made', onGuessMade)
 
   ReactDOM.render(<LobbyMenu />,
     document.querySelector('#content'));

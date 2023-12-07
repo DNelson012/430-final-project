@@ -113,9 +113,11 @@ should have these rules */
   flex-flow: row nowrap;
   align-items: center;
   justify-content: center;
+  margin-top: 16px;
 }
 #gameRounds #playerGuesses .playerGuess {
   max-width: 350px;
+  padding: 8px;
   display: block;
 }
 #gameRounds #playerGuesses .playerGuess p {
@@ -132,4 +134,9 @@ should have these rules */
   top: 0px;
   left: 0px;
   transform: translate(-80px);
+}
+
+.darken {
+  filter: brightness(90%);
+  background-color: #B1B1E5;
 }

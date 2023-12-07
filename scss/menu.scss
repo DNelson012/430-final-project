@@ -113,8 +113,12 @@ should have these rules */
     flex-flow: row nowrap;
     align-items: center;
     justify-content: center;
+
+    margin-top: 16px;
+
     .playerGuess {
       max-width: 350px;
+      padding: 8px;
       display: block;
       p {
         margin: 0 0 16px;
@@ -137,4 +141,11 @@ should have these rules */
   left: 0px;
 
   transform: translate(-80px);
+}
+
+
+
+.darken {
+  filter: brightness(90%);
+  background-color: main.$back;
 }

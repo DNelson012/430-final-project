@@ -22,12 +22,6 @@ const LobbySchema = new mongoose.Schema({
     min: 0,
     default: 0,
   },
-  usersReady: {
-    type: Number,
-    required: true,
-    min: 0,
-    default: 0,
-  },
   numRounds: {
     type: Number,
     min: 1,
@@ -36,6 +30,12 @@ const LobbySchema = new mongoose.Schema({
   tierOptions: {
     type: Array,
     required: true,
+  },
+  usersReady: {
+    type: Number,
+    required: true,
+    min: 0,
+    default: 0,
   },
   createdDate: {
     type: Date,

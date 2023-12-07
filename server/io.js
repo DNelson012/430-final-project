@@ -63,19 +63,36 @@ const leaveAllRooms = (socket) => {
 
 // Deletes everything related to a lobby from the database
 const deleteLobby = async (lobbyID) => {
-  let doc = await Lobby.deleteOne({ lobbyID }).lean().exec();
-  if (doc.acknowledged && doc.deletedCount) {
-    console.log('Lobby deleted');
-  } else {
-    console.log('Failed to delete lobby');
+  try {
+    let doc = await Lobby.deleteOne({ lobbyID }).lean().exec();
+    if (doc.acknowledged && doc.deletedCount) {
+      console.log('Lobby deleted');
+    } else {
+      console.log('Failed to delete lobby');
+    }
+
+    doc = await Image.deleteMany({ lobbyID }).lean().exec();
+    if (doc.acknowledged) {
+      console.log(`Deleted ${doc.deletedCount} images`);
+    } else {
+      console.log('Failed to delete lobby');
+    }
+  } catch (err) {
+    console.log(err);
+  }
+};
+
+// Check to see if the ready number matches the total user number
+const checkAllUsersReady = async (lobbyID) => {
+  let doc;
+  try {
+    doc = await Lobby.findOne({ lobbyID })
+      .select('userCount usersReady').lean().exec();
+  } catch (err) {
+    console.log(err);
   }
 
-  doc = await Image.deleteMany({ lobbyID }).lean().exec();
-  if (doc.acknowledged) {
-    console.log(`Deleted ${doc.deletedCount} images`);
-  } else {
-    console.log('Failed to delete lobby');
-  }
+  return doc.userCount === doc.usersReady;
 };
 
 // Lobby setup
@@ -121,7 +138,7 @@ const handleJoinLobby = async (socket, data) => {
 
 // Create & Join the given lobby
 const handleCreateLobby = async (socket, data) => {
-  const lobbyID = makeID(5);
+  const lobbyID = makeID(4);
 
   const lobbyData = {
     lobbyID,
@@ -152,9 +169,13 @@ const handleLeaveLobby = async (socket) => {
   if (!lobby) { return; }
 
   // Delete the lobby (only happens when host leaves)
-  const doc = await Lobby.findOne({ lobbyID: lobby }).select('host').lean().exec();
-  if (doc && doc.host === socket.id) {
-    deleteLobby(lobby);
+  try {
+    const doc = await Lobby.findOne({ lobbyID: lobby }).select('host').lean().exec();
+    if (doc && doc.host === socket.id) {
+      deleteLobby(lobby);
+    }
+  } catch (err) {
+    console.log(err);
   }
 
   // Remove the session data
@@ -215,12 +236,18 @@ const handleNextRound = async (socket) => {
     console.log(err);
   }
 
-  io.to(lobby).emit('next round', {
+  await io.to(lobby).emit('next round', {
     ownerID: doc[0].ownerID,
     ownerName: doc[0].ownerName,
     image: doc[0].image,
     tier: doc[0].tier,
   });
+
+  try {
+    await Image.deleteOne({ _id: doc[0]._id }).lean().exec();
+  } catch (err) {
+    console.log(err);
+  }
 };
 
 const handleImagesFinished = async (socket) => {
@@ -228,20 +255,38 @@ const handleImagesFinished = async (socket) => {
   const { session } = socket.request;
   const lobby = session.lobbyID;
 
-  let doc;
   try {
     await Lobby.updateOne({ lobbyID: lobby }, { $inc: { usersReady: 1 } }).exec();
-    doc = await Lobby.findOne({ lobbyID: lobby })
-      .select('userCount usersReady').lean().exec();
   } catch (err) {
     console.log(err);
   }
 
+  const ready = await checkAllUsersReady(lobby);
   // If all players have finished, start the game rounds
-  if (doc.userCount === doc.usersReady) {
+  if (ready) {
     Lobby.updateOne({ lobbyID: lobby }, { usersReady: 0 }).exec();
-    await io.to(lobby).emit('rounds ready', { lobbyID: lobby });
+    await io.to(lobby).emit('rounds ready');
     handleNextRound(socket);
+  }
+};
+
+const handleGuessGiven = async (socket, tier) => {
+  // Get the lobby
+  const { session } = socket.request;
+  const lobby = session.lobbyID;
+
+  try {
+    await Lobby.updateOne({ lobby }, { $inc: { usersReady: 1 } }).exec();
+  } catch (err) {
+    console.log(err);
+  }
+
+  io.to(lobby).emit('guess made', { id: socket.id, guess: tier });
+
+  // If all players have guessed, go to the next phase
+  if (checkAllUsersReady(lobby)) {
+    Lobby.updateOne({ lobbyID: lobby }, { usersReady: 0 }).exec();
+    // await io.to(lobby).emit('rounds ready');
   }
 };
 
@@ -268,6 +313,7 @@ const socketSetup = (app, sessionMiddleware) => {
     socket.on('host start', (userArr) => handleHostStart(socket, userArr));
     socket.on('image submit', (data) => handleImageSubmit(socket, data));
     socket.on('images finished', () => handleImagesFinished(socket));
+    socket.on('guess given', (tier) => handleGuessGiven(socket, tier));
   });
 
   return server;
