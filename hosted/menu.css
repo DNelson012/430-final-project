@@ -117,14 +117,19 @@ should have these rules */
 }
 #gameRounds #playerGuesses .playerGuess {
   max-width: 350px;
+  margin: 8px;
   padding: 8px;
   display: block;
 }
 #gameRounds #playerGuesses .playerGuess p {
   margin: 0 0 16px;
 }
-#gameRounds img {
+#gameRounds #imageWrapper {
   margin: 20px 0;
+  max-width: 900px;
+  max-height: 600px;
+}
+#gameRounds img {
   max-width: 900px;
   max-height: 600px;
 }
@@ -139,4 +144,23 @@ should have these rules */
 .darken {
   filter: brightness(90%);
   background-color: #B1B1E5;
+}
+
+.darkenButton {
+  filter: brightness(90%);
+}
+
+.imgGuessed {
+  filter: drop-shadow(0px 0px 20px #CC2936);
+}
+
+.correct {
+  filter: brightness(110%);
+  background-color: rgb(80, 255, 80);
+}
+
+.incorrect {
+  filter: brightness(110%);
+  background-color: rgb(255, 80, 80);
+  color: #355070;
 }

@@ -1,42 +1,47 @@
 
 const helper = require('./helper.js');
 const React = require('react');
-const { useState, createContext, useContext } = React;
+const { useState, createContext, useContext, useReducer } = React;
 const ReactDOM = require('react-dom');
+const { createRoot } = require('react-dom/client');
+let root;
 
+// Create socket
+const socket = io();
 
 // These are not stateful variables because this is the client, not the server
 // Though, it still isn't really good to just keep them lying around like this
 let isHost, lobbyUsers;
 let gameUserCount, gameNumRounds, gameTierOptions;
 let gameImageCount;
+let newRound;
 let tierGuesses, imageOwner;
-const ImageCountContext = createContext(null);
 
 
 // Helper Functions
 //  Some of these need to be above
 //  both the socket and react function,
 //  so they'll go here
-const createPlayerGuesses = (ownerID) => {
+const createPlayerGuesses = () => {
   let tempPlayersArr = [];
   const userKeys = Object.keys(lobbyUsers);
   for (let i = 0; i < userKeys.length; i++) {
-    let classes;
+    let classes, guessing;
     if (tierGuesses[userKeys[i]]) {
       classes = 'playerGuess darken'
+      guessing = 'Guessed'
     } else {
       classes = 'playerGuess'
+      guessing = 'Guessing'
     }
 
     // The linter does not allow continue statements
     // and I shed a tear each time I'm forced to if instead
-    if (userKeys[i] !== ownerID) {
-      console.log('This is not your image');
+    if (userKeys[i] !== imageOwner) {
       tempPlayersArr.push(
         <div className={classes}>
           <p> {lobbyUsers[userKeys[i]]}, </p>
-          <p> Guess: tier </p>
+          <p> {guessing} </p>
         </div>);
     }
   }
@@ -44,11 +49,54 @@ const createPlayerGuesses = (ownerID) => {
   return tempPlayersArr;
 }
 
+const createGradedGuesses = (tier) => {
+  let tempPlayersArr = [];
+  const userKeys = Object.keys(lobbyUsers);
+  for (let i = 0; i < userKeys.length; i++) {
+    if (userKeys[i] !== imageOwner) {
+      let classes;
+      let guess = Number(tierGuesses[userKeys[i]].tier);
+      if (guess === Number(tier)) {
+        classes = 'playerGuess correct'
+      } else {
+        classes = 'playerGuess incorrect'
+      }
+      guess = "Guess: " + gameTierOptions[guess - 1];
+
+      // The linter does not allow continue statements
+      // and I shed a tear each time I'm forced to if instead
+      tempPlayersArr.push(
+        <div className={classes}>
+          <p> {lobbyUsers[userKeys[i]]}, </p>
+          <p> {guess} </p>
+        </div>);
+    }
+  }
+
+  return tempPlayersArr;
+}
+
+const disableGuessing = () => {
+  const button = document.querySelector('#guessSubmit');
+  button.setAttribute('disabled', "");
+  button.classList.add('darkenButton');
+  button.innerText = "Waiting";
+
+  document.querySelector('#tierSelect').setAttribute('disabled', "");
+}
+
+const resetRound = () => {
+  const button = document.querySelector('#guessSubmit');
+  button.removeAttribute('disabled');
+  button.classList.remove('darkenButton');
+  button.innerText = "Guess";
+
+  document.querySelector('#tierSelect').removeAttribute('disabled');
+}
+
 
 
 // Socket Functions - Game setup
-const socket = io();
-
 const handleCreateLobby = () => {
   const name = document.querySelector('#displayName').value;
   // Check if there was any value given
@@ -100,8 +148,7 @@ const displayToChat = (text) => {
 
 const onUserJoin = (obj) => {
   if (!document.querySelector('#lobbyLounge')) {
-    ReactDOM.render(<LobbyLounge lobbyID={obj.lobbyID} host={obj.host} />,
-      document.querySelector('#content'));
+    root.render(<LobbyLounge lobbyID={obj.lobbyID} host={obj.host} firstMsg={obj.text} />);
   }
   displayToChat(obj.text);
 
@@ -146,8 +193,7 @@ const hostStartGame = () => {
 
 const onGameStart = (userArr) => {
   lobbyUsers = userArr;
-  ReactDOM.render(<GamePrep />,
-    document.querySelector('#content'));
+  root.render(<GamePrep />);
 }
 
 const handleImageSubmit = () => {
@@ -181,17 +227,16 @@ const onImageReceived = () => {
 }
 
 const onRoundsReady = () => {
-  // ReactDOM.render(<GameRounds />,
-  //   document.querySelector('#content'));
+  //
 }
 
 const onNextRound = (obj) => {
   const { ownerID, ownerName, image, tier } = obj;
   tierGuesses = {};
   imageOwner = ownerID;
+  newRound = true;
 
-  ReactDOM.render(<GameRounds name={ownerName} imgSrc={image} tier={tier} />,
-    document.querySelector('#content'));
+  root.render(<GameRounds name={ownerName} imgSrc={image} tier={tier} />);
 }
 
 const handleGuess = () => {
@@ -201,27 +246,22 @@ const handleGuess = () => {
     tier,
   });
 
-  document.querySelector('#guessSubmit').setAttribute('disabled', "");
-  document.querySelector('#guessSubmit').innerText = "Waiting";
-  document.querySelector('#tierSelect').setAttribute('disabled', "");
+  disableGuessing();
 }
 
 
 
 // React Functions
 const showMenu = () => {
-  ReactDOM.render(<LobbyMenu />,
-    document.querySelector('#content'));
+  root.render(<LobbyMenu />);
 }
 
 const showJoinLobby = () => {
-  ReactDOM.render(<LobbyJoin />,
-    document.querySelector('#content'));
+  root.render(<LobbyJoin />);
 }
 
 const showCreateLobby = () => {
-  ReactDOM.render(<LobbyCreate />,
-    document.querySelector('#content'));
+  root.render(<LobbyCreate />);
 }
 
 
@@ -246,7 +286,9 @@ const LobbyLounge = (props) => {
       </button>
       <span>Waiting in a lobby: {props.lobbyID}</span>
       {startButton}
-      <div id='lobbyChat'></div>
+      <div id='lobbyChat'>
+        <span> {props.firstMsg} </span>
+      </div>
     </div>
   );
 }
@@ -355,7 +397,29 @@ const GamePrep = (props) => {
 
 const GameRounds = (props) => {
   // Set up state variables
-  const [playersArr, setPlayersArr] = useState(createPlayerGuesses(imageOwner));
+  const [playersArr, setPlayersArr] = useState(createPlayerGuesses());
+
+  // Initial set up
+  if (newRound) {
+    newRound = false;
+    setTimeout(() => {
+      resetRound();
+
+      // Should only be done once
+      // Isn't
+      document.querySelector('#imageWrapper img').addEventListener('load', () => {
+        const gameImg = document.querySelector('#imageWrapper img');
+        gameImg.classList.remove('imgGuessed');
+      });
+
+      if (imageOwner === socket.id) {
+        disableGuessing();
+      }
+
+      const newPlayersArr = createPlayerGuesses();
+      setPlayersArr(newPlayersArr);
+    }, 20);
+  }
 
   // Socket functions
   //  moved inside for convenience, 
@@ -363,11 +427,21 @@ const GameRounds = (props) => {
   const onGuessMade = (obj) => {
     tierGuesses[obj.id] = obj.guess;
 
-    const newPlayersArr = createPlayerGuesses(imageOwner);
+    const newPlayersArr = createPlayerGuesses();
 
     setPlayersArr(newPlayersArr);
   }
   socket.on('guess made', onGuessMade)
+
+  const onGuessesFinished = () => {
+    const newPlayersArr = createGradedGuesses(props.tier);
+
+    setPlayersArr(newPlayersArr);
+
+    document.querySelector('#imageWrapper img').classList.add('imgGuessed');
+    document.querySelector('#guessSubmit').innerText = "Next Round Starting in 10s";
+  }
+  socket.on('guesses finished', onGuessesFinished);
 
   // Populate the tier select input
   let optionsArr = [];
@@ -386,15 +460,15 @@ const GameRounds = (props) => {
     <div id="playerGuesses">
       {playersArr}
     </div>;
-  
-  // name={ownerName} imgSrc={image} tier={tier}
 
   return (
     <div id='gameRounds'>
       <span>What did {props.name} rank this?</span>
-      <img crossOrigin="anonymous"
-        src={props.imgSrc}
-        alt="If you can read this, you gave a bad link." />
+      <div id='imageWrapper'>
+        <img crossOrigin="anonymous"
+          src={props.imgSrc}
+          alt="If you can read this, you gave a bad link." />
+      </div>
       <span>Players:</span>
       {playerGuesses}
       <label htmlFor="tierSelect">Select a tier</label>
@@ -421,7 +495,7 @@ const init = () => {
   socket.on('rounds ready', onRoundsReady);
   socket.on('next round', onNextRound)
 
-  ReactDOM.render(<LobbyMenu />,
-    document.querySelector('#content'));
+  root = createRoot(document.querySelector('#content'));
+  root.render(<LobbyMenu />);
 }
 window.onload = init;

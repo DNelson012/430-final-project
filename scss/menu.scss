@@ -118,6 +118,7 @@ should have these rules */
 
     .playerGuess {
       max-width: 350px;
+      margin: 8px;
       padding: 8px;
       display: block;
       p {
@@ -126,8 +127,12 @@ should have these rules */
     }
   }
 
-  img {
+  #imageWrapper {
     margin: 20px 0;
+    max-width: 900px;
+    max-height: 600px;
+  }
+  img {
     max-width: 900px;
     max-height: 600px;
   }
@@ -148,4 +153,23 @@ should have these rules */
 .darken {
   filter: brightness(90%);
   background-color: main.$back;
+}
+
+.darkenButton {
+  filter: brightness(90%);
+}
+
+.imgGuessed {
+  filter: drop-shadow(0px 0px 20px main.$contrast); 
+}
+
+.correct {
+  filter: brightness(110%);
+  background-color: rgb(80, 255, 80);
+}
+
+.incorrect {
+  filter: brightness(110%);
+  background-color: rgb(255, 80, 80);
+  color: main.$primary;
 }

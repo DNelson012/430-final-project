@@ -228,6 +228,9 @@ const handleNextRound = async (socket) => {
   const { session } = socket.request;
   const lobby = session.lobbyID;
 
+  // Reset the user ready number
+  await Lobby.updateOne({ lobbyID: lobby }, { usersReady: 1 }).exec();
+
   // https://stackoverflow.com/questions/2824157/how-can-i-get-a-random-record-from-mongodb
   let doc;
   try {
@@ -261,10 +264,9 @@ const handleImagesFinished = async (socket) => {
     console.log(err);
   }
 
-  const ready = await checkAllUsersReady(lobby);
   // If all players have finished, start the game rounds
+  const ready = await checkAllUsersReady(lobby);
   if (ready) {
-    Lobby.updateOne({ lobbyID: lobby }, { usersReady: 0 }).exec();
     await io.to(lobby).emit('rounds ready');
     handleNextRound(socket);
   }
@@ -276,7 +278,7 @@ const handleGuessGiven = async (socket, tier) => {
   const lobby = session.lobbyID;
 
   try {
-    await Lobby.updateOne({ lobby }, { $inc: { usersReady: 1 } }).exec();
+    await Lobby.updateOne({ lobbyID: lobby }, { $inc: { usersReady: 1 } }).exec();
   } catch (err) {
     console.log(err);
   }
@@ -284,10 +286,11 @@ const handleGuessGiven = async (socket, tier) => {
   io.to(lobby).emit('guess made', { id: socket.id, guess: tier });
 
   // If all players have guessed, go to the next phase
-  if (checkAllUsersReady(lobby)) {
-    Lobby.updateOne({ lobbyID: lobby }, { usersReady: 0 }).exec();
-    // await io.to(lobby).emit('rounds ready');
-    // set timeout, start another round later
+  const ready = await checkAllUsersReady(lobby);
+  if (ready) {
+    await io.to(lobby).emit('guesses finished', session.name);
+    // Start another round a bit later
+    setTimeout(() => handleNextRound(socket), 10000);
   }
 };
 
