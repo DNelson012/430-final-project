@@ -1,7 +1,7 @@
 
 const helper = require('./helper.js');
 const React = require('react');
-const { useState } = React;
+const { useState, createContext, useContext } = React;
 const ReactDOM = require('react-dom');
 
 
@@ -11,6 +11,7 @@ let isHost, lobbyUsers;
 let gameUserCount, gameNumRounds, gameTierOptions;
 let gameImageCount;
 let tierGuesses, imageOwner;
+const ImageCountContext = createContext(null);
 
 
 // Helper Functions
@@ -18,7 +19,7 @@ let tierGuesses, imageOwner;
 //  both the socket and react function,
 //  so they'll go here
 const createPlayerGuesses = (ownerID) => {
-  let playersArr = [];
+  let tempPlayersArr = [];
   const userKeys = Object.keys(lobbyUsers);
   for (let i = 0; i < userKeys.length; i++) {
     let classes;
@@ -31,7 +32,8 @@ const createPlayerGuesses = (ownerID) => {
     // The linter does not allow continue statements
     // and I shed a tear each time I'm forced to if instead
     if (userKeys[i] !== ownerID) {
-      playersArr.push(
+      console.log('This is not your image');
+      tempPlayersArr.push(
         <div className={classes}>
           <p> {lobbyUsers[userKeys[i]]}, </p>
           <p> Guess: tier </p>
@@ -39,8 +41,7 @@ const createPlayerGuesses = (ownerID) => {
     }
   }
 
-  console.log(playersArr);
-  return playersArr;
+  return tempPlayersArr;
 }
 
 
@@ -163,11 +164,6 @@ const handleImageSubmit = () => {
 }
 
 const onImageReceived = () => {
-  gameImageCount++;
-  // This part should be very temporary, until I ask how I should use React
-  document.querySelector('#imgCounter').innerText
-    = `Images: ${gameImageCount}/${gameNumRounds}`;
-  //
   document.querySelector('#imageURL').value = "";
   document.querySelector('#tierSelect').value = 1;
   document.querySelector('#imageSubmit').removeAttribute('disabled');
@@ -208,13 +204,6 @@ const handleGuess = () => {
   document.querySelector('#guessSubmit').setAttribute('disabled', "");
   document.querySelector('#guessSubmit').innerText = "Waiting";
   document.querySelector('#tierSelect').setAttribute('disabled', "");
-}
-
-const onGuessMade = (obj) => {
-  tierGuesses[obj.id] = obj.guess;
-
-  const playersArr = createPlayerGuesses(imageOwner);
-  console.log(playersArr);
 }
 
 
@@ -323,14 +312,14 @@ const LobbyMenu = (props) => {
 // React Components - Game
 const GamePrep = (props) => {
   // Set up state watching for the image count
-  // const [imgNum, setImgNum] = useState(props.imgNum);
+  const [imgNum, setImgNum] = useState(0);
 
   // Populate the tier select input
   let optionsArr = [];
   let count = 0;
   gameTierOptions.forEach((elem) => {
     count++;
-    optionsArr.push(<option value={count}> {elem} </option>);
+    optionsArr.push(<option key={count} value={count}> {elem} </option>);
   });
   const tierSelect =
     <select name="tierSelect" id="tierSelect">
@@ -338,10 +327,16 @@ const GamePrep = (props) => {
     </select>;
   //
 
+  const submit = () => {
+    gameImageCount++;
+    setImgNum(gameImageCount);
+    handleImageSubmit();
+  }
+
   return (
     <div id='gamePrep'>
       <span>Submit your images and corresponding tiers</span>
-      <span id='imgCounter'>Images: {gameImageCount}/{gameNumRounds}</span>
+      <span id='imgCounter'>Images: {imgNum}/{gameNumRounds}</span>
       <label htmlFor="imageURL">Enter a URL for an image</label>
       <input className='inputSmallWide' type="url" name="imageURL"
         id="imageURL" placeholder='URL' />
@@ -350,7 +345,7 @@ const GamePrep = (props) => {
       <button
         className='buttonLarge'
         id='imageSubmit'
-        onClick={handleImageSubmit}>
+        onClick={submit}>
         Submit
       </button>
     </div>
@@ -359,12 +354,27 @@ const GamePrep = (props) => {
 
 
 const GameRounds = (props) => {
+  // Set up state variables
+  const [playersArr, setPlayersArr] = useState(createPlayerGuesses(imageOwner));
+
+  // Socket functions
+  //  moved inside for convenience, 
+  //  I'm unsure of how 'good' it is to do it like this
+  const onGuessMade = (obj) => {
+    tierGuesses[obj.id] = obj.guess;
+
+    const newPlayersArr = createPlayerGuesses(imageOwner);
+
+    setPlayersArr(newPlayersArr);
+  }
+  socket.on('guess made', onGuessMade)
+
   // Populate the tier select input
   let optionsArr = [];
   let count = 0;
   gameTierOptions.forEach((elem) => {
     count++;
-    optionsArr.push(<option value={count}> {elem} </option>);
+    optionsArr.push(<option key={count} value={count}> {elem} </option>);
   });
   const tierSelect =
     <select name="tierSelect" id="tierSelect">
@@ -372,29 +382,17 @@ const GameRounds = (props) => {
     </select>;
   //
 
-  // Populate players
-  // let playersArr = [];
-  // const userKeys = Object.keys(lobbyUsers);
-  // for (let i = 0; i < userKeys.length; i++) {
-  //   playersArr.push(
-  //     <div className='playerGuess'>
-  //       <p> {lobbyUsers[userKeys[i]]}, </p>
-  //       <p> Guess: tier </p>
-  //     </div>);
-  // }
-  const playersArr = createPlayerGuesses(imageOwner);
   const playerGuesses = 
     <div id="playerGuesses">
       {playersArr}
     </div>;
   
-
   // name={ownerName} imgSrc={image} tier={tier}
 
   return (
     <div id='gameRounds'>
       <span>What did {props.name} rank this?</span>
-      <img crossorigin="anonymous"
+      <img crossOrigin="anonymous"
         src={props.imgSrc}
         alt="If you can read this, you gave a bad link." />
       <span>Players:</span>
@@ -422,7 +420,6 @@ const init = () => {
   socket.on('image received', onImageReceived);
   socket.on('rounds ready', onRoundsReady);
   socket.on('next round', onNextRound)
-  socket.on('guess made', onGuessMade)
 
   ReactDOM.render(<LobbyMenu />,
     document.querySelector('#content'));

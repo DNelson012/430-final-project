@@ -287,6 +287,7 @@ const handleGuessGiven = async (socket, tier) => {
   if (checkAllUsersReady(lobby)) {
     Lobby.updateOne({ lobbyID: lobby }, { usersReady: 0 }).exec();
     // await io.to(lobby).emit('rounds ready');
+    // set timeout, start another round later
   }
 };
 
