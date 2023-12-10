@@ -99,16 +99,37 @@ const resetRound = () => {
 // Socket Functions - Game setup
 const handleCreateLobby = () => {
   const name = document.querySelector('#displayName').value;
-  // Check if there was any value given
+  // Check for missing name
   if (!name) { return; }
 
-  const numRounds = 3;
-  const tierOptions = [
-    'S',
-    'A',
-    'B',
-    'F'
-  ];
+  // Use defaults if the 'payment' wasn't made
+  const paymentMade = document.querySelector('#payOption');
+  if (paymentMade) {
+    isHost = true;
+    lobbyUsers = {};
+  
+    socket.emit('create lobby', { 
+      name, 
+      numRounds: 3, 
+      tierOptions: ['S','A','B','C','D','F'],
+    });
+  
+    return;
+  }
+
+  const numRounds = document.querySelector('#roundSelect').value;
+  const tierInputs = document.querySelectorAll('#tiers input');
+  const tierOptions = [];
+  let tierMissing = false;
+  for (let i = 0; i < tierInputs.length; i++) {
+    tierOptions.push(tierInputs[i].value);
+    if (!tierInputs[i].value) {
+      tierMissing = true;
+    }
+  }
+
+  // Check for missing values
+  if (!numRounds || tierMissing) { return; }
   
   isHost = true;
   lobbyUsers = {};
@@ -264,6 +285,20 @@ const showJoinLobby = () => {
 
 const showCreateLobby = () => {
   root.render(<LobbyCreate />);
+
+  // Using createRoot might be async?
+  //  This should help most of the time
+  setTimeout(() => {
+    document.querySelector('#payOption').addEventListener('change', () => {
+      document.querySelector('#payLabel').remove();
+      document.querySelector('#payOption').remove();
+      document.querySelector('#roundSelect').removeAttribute('disabled');
+      document.querySelectorAll('#tiers input').forEach((el) => {
+        el.removeAttribute('disabled', '');
+      });
+      document.querySelector('#extraOptions').classList.remove('locked');
+    });
+  }, 20);
 }
 
 
@@ -332,6 +367,30 @@ const LobbyCreate = (props) => {
       <label htmlFor="displayName">Enter your name</label>
       <input type="text" name="displayName"
         id="displayName" placeholder='Name' />
+
+      <label id='payLabel' htmlFor="payOption">Pay for extra options?</label>
+      <input type="checkbox" name="payOption" id="payOption"/>
+      <div id='extraOptions' className='locked'>
+        <label id='roundLabel' htmlFor="roundSelect">Images per round</label>
+        <select disabled name="roundSelect" id="roundSelect" defaultValue={3}>
+          <option value={1}> 1 </option>
+          <option value={2}> 2 </option>
+          <option value={3}> 3 </option>
+          <option value={4}> 4 </option>
+          <option value={5}> 5 </option>
+          <option value={6}> 6 </option>
+        </select>
+        <span id='tierLabel'>Tier Names</span>
+        <div id='tiers'>
+          <input disabled type="text" id="tier1" placeholder='S' defaultValue="S" />
+          <input disabled type="text" id="tier2" placeholder='A' defaultValue="A" />
+          <input disabled type="text" id="tier3" placeholder='B' defaultValue="B" />
+          <br />
+          <input disabled type="text" id="tier4" placeholder='C' defaultValue="C" />
+          <input disabled type="text" id="tier5" placeholder='D' defaultValue="D" />
+          <input disabled type="text" id="tier6" placeholder='F' defaultValue="F" />
+        </div>
+      </div>
       <button
         className='buttonLarge'
         id='lobbySubmit'

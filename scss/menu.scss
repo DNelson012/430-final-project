@@ -72,24 +72,38 @@ should have these rules */
   }
 }
 
-
-
-.buttonLarge {
-  font-size: 2em;
-  margin: 20px;
-  padding: 10px 20px;
+#payOption {
+  width: 40;
+  height: 40px;
 }
 
-.buttonSmall {
-  font-size: 0.5em;
+#extraOptions {
+  display: flex;
+  flex-flow: column nowrap;
+  align-items: center;
+
+  padding: 16px;
   margin: 16px;
-  padding: 5px 10px;
+
+  #roundLabel {
+    margin-top: 0px;
+  }
+
+  #tierLabel {
+    margin-top: 16px;
+  }
+
+  #tiers input {
+    margin: 0 8px 6px;
+  }
 }
 
-.inputSmallWide {
-  font-size: 0.5em !important;
-  width: 100% !important;
+.locked {
+  filter: brightness(80%);
+  background-color: main.$back;
 }
+
+
 
 #lobbySubmit {
   font-size: 1em;
@@ -110,6 +124,8 @@ should have these rules */
     display: block;
   }
 }
+
+
 
 #gameRounds {
   #playerGuesses {
@@ -153,6 +169,23 @@ should have these rules */
 }
 
 
+
+.buttonLarge {
+  font-size: 2em;
+  margin: 20px;
+  padding: 10px 20px;
+}
+
+.buttonSmall {
+  font-size: 0.5em;
+  margin: 16px;
+  padding: 5px 10px;
+}
+
+.inputSmallWide {
+  font-size: 0.5em !important;
+  width: 100% !important;
+}
 
 .darken {
   filter: brightness(90%);

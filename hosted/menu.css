@@ -78,21 +78,31 @@ should have these rules */
   text-align: center;
 }
 
-.buttonLarge {
-  font-size: 2em;
-  margin: 20px;
-  padding: 10px 20px;
+#payOption {
+  width: 40;
+  height: 40px;
 }
 
-.buttonSmall {
-  font-size: 0.5em;
+#extraOptions {
+  display: flex;
+  flex-flow: column nowrap;
+  align-items: center;
+  padding: 16px;
   margin: 16px;
-  padding: 5px 10px;
+}
+#extraOptions #roundLabel {
+  margin-top: 0px;
+}
+#extraOptions #tierLabel {
+  margin-top: 16px;
+}
+#extraOptions #tiers input {
+  margin: 0 8px 6px;
 }
 
-.inputSmallWide {
-  font-size: 0.5em !important;
-  width: 100% !important;
+.locked {
+  filter: brightness(80%);
+  background-color: #B1B1E5;
 }
 
 #lobbySubmit {
@@ -143,6 +153,23 @@ should have these rules */
   top: 0px;
   left: 0px;
   transform: translate(-80px);
+}
+
+.buttonLarge {
+  font-size: 2em;
+  margin: 20px;
+  padding: 10px 20px;
+}
+
+.buttonSmall {
+  font-size: 0.5em;
+  margin: 16px;
+  padding: 5px 10px;
+}
+
+.inputSmallWide {
+  font-size: 0.5em !important;
+  width: 100% !important;
 }
 
 .darken {
