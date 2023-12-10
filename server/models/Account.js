@@ -57,6 +57,7 @@ AccountSchema.statics.generateHash = (password) => bcrypt.hash(password, saltRou
 */
 AccountSchema.statics.authenticate = async (username, password, callback) => {
   try {
+    console.log(username);
     const doc = await AccountModel.findOne({ username }).exec();
     if (!doc) {
       return callback();
@@ -71,6 +72,14 @@ AccountSchema.statics.authenticate = async (username, password, callback) => {
     return callback(err);
   }
 };
+
+AccountSchema.statics.updatePassword = async (username, password) => {
+  try {
+    return await AccountModel.updateOne({ username }, { password }).exec();
+  } catch (err) {
+    return err;
+  }
+}
 
 AccountModel = mongoose.model('Account', AccountSchema);
 module.exports = AccountModel;

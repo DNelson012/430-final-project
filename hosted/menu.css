@@ -35,6 +35,10 @@ body {
   background-color: #B1B1E5;
 }
 
+#header a {
+  font-size: 0.6em;
+}
+
 #content {
   min-height: 650px;
   border-top: 1px solid #355070;

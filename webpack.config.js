@@ -4,6 +4,7 @@ module.exports = {
     entry: {
         menu: './client/menu.jsx',
         login: './client/login.jsx',
+        pwchange: './client/pwchange.jsx',
     },
     module: {
         rules: [

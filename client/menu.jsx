@@ -193,6 +193,8 @@ const hostStartGame = () => {
 
 const onGameStart = (userArr) => {
   lobbyUsers = userArr;
+  const links = document.querySelectorAll('#header a');
+  links.forEach((el) => { el.remove(); })
   root.render(<GamePrep />);
 }
 

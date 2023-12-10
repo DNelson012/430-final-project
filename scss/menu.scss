@@ -23,6 +23,10 @@ body {
   background-color: main.$back;
 }
 
+#header a {
+  font-size: 0.6em;
+}
+
 #content {
   min-height: 650px;
 
