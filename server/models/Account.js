@@ -57,7 +57,6 @@ AccountSchema.statics.generateHash = (password) => bcrypt.hash(password, saltRou
 */
 AccountSchema.statics.authenticate = async (username, password, callback) => {
   try {
-    console.log(username);
     const doc = await AccountModel.findOne({ username }).exec();
     if (!doc) {
       return callback();

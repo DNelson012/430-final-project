@@ -228,6 +228,8 @@ const handleNextRound = async (socket) => {
   // If there are no images left, tell the users the game is done
   if (!doc[0]) {
     await io.to(lobby).emit('game done');
+    // Delete the lobby while you're at it
+    await deleteLobby(lobby);
     return;
   }
 

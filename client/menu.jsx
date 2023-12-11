@@ -12,11 +12,11 @@ const socket = io();
 // These are not stateful variables because this is the client, not the server
 // Though, it still isn't really good to just keep them lying around like this
 let isHost, lobbyUsers;
-let gameUserCount, gameNumRounds, gameTierOptions;
+let gameNumRounds, gameTierOptions;
 let gameImageCount;
 let newRound;
 let tierGuesses, imageOwner;
-let totalGuesses;
+let totalGuesses, countGuessesOnce;
 
 
 // Helper Functions
@@ -203,7 +203,6 @@ const onUserJoin = (obj) => {
   }
 
   // Populate global game state variables 
-  gameUserCount = obj.userCount; 
   gameNumRounds = obj.numRounds;
   gameTierOptions = obj.tierOptions;
   
@@ -286,6 +285,7 @@ const onNextRound = (obj) => {
   tierGuesses = {};
   imageOwner = ownerID;
   newRound = true;
+  countGuessesOnce = false;
 
   root.render(<GameRounds name={ownerName} imgSrc={image} tier={tier} />);
 }
@@ -537,14 +537,17 @@ const GameRounds = (props) => {
   socket.on('guess made', onGuessMade)
 
   const onGuessesFinished = () => {
-    const newPlayersArr = createGradedGuesses(props.tier);
-
-    setPlayersArr(newPlayersArr);
-
-    document.querySelector('#imageDesc').innerHTML 
-      = `${props.name} ranked this as "${gameTierOptions[props.tier - 1]}"`;
-    document.querySelector('#imageWrapper img').classList.add('imgGuessed');
-    document.querySelector('#guessSubmit').innerText = "Next Round Starting in 10s";
+    if (!countGuessesOnce) {
+      countGuessesOnce = true;
+      const newPlayersArr = createGradedGuesses(props.tier);
+  
+      setPlayersArr(newPlayersArr);
+  
+      document.querySelector('#imageDesc').innerHTML 
+        = `${props.name} ranked this as "${gameTierOptions[props.tier - 1]}"`;
+      document.querySelector('#imageWrapper img').classList.add('imgGuessed');
+      document.querySelector('#guessSubmit').innerText = "Next Round Starting in 10s";
+    }
   }
   socket.on('guesses finished', onGuessesFinished);
 
