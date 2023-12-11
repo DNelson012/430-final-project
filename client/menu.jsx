@@ -16,6 +16,7 @@ let gameUserCount, gameNumRounds, gameTierOptions;
 let gameImageCount;
 let newRound;
 let tierGuesses, imageOwner;
+let totalGuesses;
 
 
 // Helper Functions
@@ -104,7 +105,7 @@ const handleCreateLobby = () => {
 
   // Use defaults if the 'payment' wasn't made
   const paymentMade = document.querySelector('#payOption');
-  if (paymentMade) {
+  if (paymentMade) { // paymentMade.checked
     isHost = true;
     lobbyUsers = {};
   
@@ -214,6 +215,8 @@ const hostStartGame = () => {
 
 const onGameStart = (userArr) => {
   lobbyUsers = userArr;
+  totalGuesses = {} // socket id : 0 // usersArr is id : name
+
   const links = document.querySelectorAll('#header a');
   links.forEach((el) => { el.remove(); })
   root.render(<GamePrep />);
@@ -270,6 +273,12 @@ const handleGuess = () => {
   });
 
   disableGuessing();
+}
+
+
+
+const onGameDone = () => {
+
 }
 
 
@@ -555,6 +564,8 @@ const init = () => {
   socket.on('image received', onImageReceived);
   socket.on('rounds ready', onRoundsReady);
   socket.on('next round', onNextRound)
+
+  socket.on('game done', onGameDone);
 
   root = createRoot(document.querySelector('#content'));
   root.render(<LobbyMenu />);

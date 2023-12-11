@@ -239,6 +239,12 @@ const handleNextRound = async (socket) => {
     console.log(err);
   }
 
+  // If there are no images left, tell the users the game is done
+  if (!doc[0]) {
+    await io.to(lobby).emit('game done');
+    return;
+  }
+
   await io.to(lobby).emit('next round', {
     ownerID: doc[0].ownerID,
     ownerName: doc[0].ownerName,
