@@ -21,6 +21,7 @@ const handlePWChange = (e) => {
     return false;
   }
 
+  // Attempt to change password
   helper.sendPost(e.target.action, { passOld, pass, pass2 });
 
   return false;

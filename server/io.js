@@ -47,20 +47,6 @@ const leaveAllRooms = (socket) => {
   });
 };
 
-// Call a function only for members of a given lobby
-//  Might not actually be that useful
-// const doForLobby = (socket, func) => {
-//   // If there are no rooms, it says zero
-//   //  This is bad when I want that id room
-//   //  So this calls it immediately if the id is the only room
-//   if (socket.rooms.size === 0) { func(); }
-//   socket.rooms.forEach(room => {
-//     if (room === socket.id) return;
-
-//     func()
-//   });
-// }
-
 // Deletes everything related to a lobby from the database
 const deleteLobby = async (lobbyID) => {
   try {

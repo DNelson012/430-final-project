@@ -36,6 +36,9 @@ if (process.env.NODE_ENV === 'production') {
 }
 
 // Lobby checking
+// If I had an HTTP request that only would be allowed in a lobby,
+// I'd need to use something like this
+//  I don't, so this never is used currently
 const requiresLobby = (req, res, next) => {
   if (!req.session.lobbyID) {
     return res.redirect('/menu');

@@ -15,6 +15,7 @@ const handleLogin = (e) => {
     return false;
   }
 
+  // Attempt to log in
   helper.sendPost(e.target.action, { username, pass });
 
   return false;
@@ -38,6 +39,7 @@ const handleSignup = (e) => {
     return false;
   }
 
+  // Attempt to sign up
   helper.sendPost(e.target.action, { username, pass, pass2 });
 
   return false;
@@ -95,13 +97,13 @@ const init = () => {
   const loginButton = document.getElementById('loginButton');
   const signupButton = document.getElementById('signupButton');
 
+  // Set up buttons
   loginButton.addEventListener('click', (e) => {
     e.preventDefault();
     ReactDOM.render(<LoginWindow />,
       document.getElementById('content'));
     return false;
   });
-
   signupButton.addEventListener('click', (e) => {
     e.preventDefault();
     ReactDOM.render(<SignupWindow />,
@@ -109,6 +111,7 @@ const init = () => {
     return false;
   });
 
+  // Render initial window
   ReactDOM.render(<LoginWindow />,
     document.getElementById('content'));
 }

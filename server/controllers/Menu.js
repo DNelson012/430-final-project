@@ -4,7 +4,7 @@ const menuPage = async (req, res) => {
     'Content-Security-Policy',
     'img-src * https://cdn.discordapp.com/ https://pbs.twimg.com/',
   );
-  res.header('Access-Control-Allow-Origin', '*');
+  res.header('Access-Control-Allow-Origin', '*'); // Neither is this
 
   res.render('menu');
 };

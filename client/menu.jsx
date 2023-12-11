@@ -23,6 +23,9 @@ let totalGuesses;
 //  Some of these need to be above
 //  both the socket and react function,
 //  so they'll go here
+
+// Creates an array of React elements
+// that contains each player and their guessing status
 const createPlayerGuesses = () => {
   let tempPlayersArr = [];
   const userKeys = Object.keys(lobbyUsers);
@@ -50,6 +53,8 @@ const createPlayerGuesses = () => {
   return tempPlayersArr;
 }
 
+// Similar to createPlayerGuesses
+// Creates those elements but with the guesses made
 const createGradedGuesses = (tier) => {
   let tempPlayersArr = [];
   const userKeys = Object.keys(lobbyUsers);
@@ -64,8 +69,6 @@ const createGradedGuesses = (tier) => {
       }
       guess = "Guess: " + gameTierOptions[guess - 1];
 
-      // The linter does not allow continue statements
-      // and I shed a tear each time I'm forced to if instead
       tempPlayersArr.push(
         <div className={classes}>
           <p> {lobbyUsers[userKeys[i]]}, </p>
@@ -77,6 +80,9 @@ const createGradedGuesses = (tier) => {
   return tempPlayersArr;
 }
 
+// Disables the button for guessing
+//  and the select element next to it
+// Very not-React
 const disableGuessing = () => {
   const button = document.querySelector('#guessSubmit');
   button.setAttribute('disabled', "");
@@ -86,6 +92,7 @@ const disableGuessing = () => {
   document.querySelector('#tierSelect').setAttribute('disabled', "");
 }
 
+// Un-does everything that disableGuessing does
 const resetRound = () => {
   const button = document.querySelector('#guessSubmit');
   button.removeAttribute('disabled');
@@ -118,6 +125,7 @@ const handleCreateLobby = () => {
     return;
   }
 
+  // Get the inputs
   const numRounds = document.querySelector('#roundSelect').value;
   const tierInputs = document.querySelectorAll('#tiers input');
   const tierOptions = [];
@@ -132,6 +140,7 @@ const handleCreateLobby = () => {
   // Check for missing values
   if (!numRounds || tierMissing) { return; }
   
+  // Initialize some global variables
   isHost = true;
   lobbyUsers = {};
 
@@ -150,6 +159,7 @@ const handleJoinLobby = () => {
   // Check if there was any value given
   if (!lobbyID || !name) { return; }
 
+  // Initialize some global variables
   isHost = false;
   lobbyUsers = {};
 
@@ -163,6 +173,7 @@ const displayToChat = (text) => {
   // If there is no chat, don't do anything
   if (!chat) { return; }
 
+  // Adds an element with the given text to the chat element
   const textSpan = document.createElement('span');
   textSpan.innerText = text;
   chat.appendChild(textSpan);
@@ -174,20 +185,20 @@ const onUserJoin = (obj) => {
   }
   displayToChat(obj.text);
 
-  // This is a bit of a hack, 
-  // but don't do anything else if there was an error
+  // Don't do anything else if there was an error
   if (obj.err) {
     console.log(obj.text);
     return;
   }
 
-  // The host keeps track of the users
+  // The host only keeps track of the users
+  // At this point in time
   if (isHost) {
     lobbyUsers[obj.user.id] = obj.user.name;
   }
 
-  // Populate game state variables 
-  gameUserCount = obj.userCount;
+  // Populate global game state variables 
+  gameUserCount = obj.userCount; 
   gameNumRounds = obj.numRounds;
   gameTierOptions = obj.tierOptions;
   
@@ -217,6 +228,7 @@ const onGameStart = (userArr) => {
   lobbyUsers = userArr;
   totalGuesses = {} // socket id : 0 // usersArr is id : name
 
+  // Remove the links to log out and change password
   const links = document.querySelectorAll('#header a');
   links.forEach((el) => { el.remove(); })
   root.render(<GamePrep />);
@@ -227,6 +239,7 @@ const handleImageSubmit = () => {
   const tier = document.querySelector('#tierSelect').value;
   if (!image || !tier) { return; }
 
+  // Disable any more submissions until the image is received
   document.querySelector('#imageSubmit').setAttribute('disabled', "");
 
   socket.emit('image submit', {
@@ -236,11 +249,12 @@ const handleImageSubmit = () => {
 }
 
 const onImageReceived = () => {
+  // Reset and re-enable image submission
   document.querySelector('#imageURL').value = "";
   document.querySelector('#tierSelect').value = 1;
   document.querySelector('#imageSubmit').removeAttribute('disabled');
 
-  // When done, disabled the buttons and whatnot
+  // When done all, disabled the buttons and whatnot
   if (gameImageCount === gameNumRounds) {
     document.querySelector('#imageSubmit').setAttribute('disabled', "");
     document.querySelector('#imageSubmit').innerText = "Waiting";
@@ -253,11 +267,13 @@ const onImageReceived = () => {
 }
 
 const onRoundsReady = () => {
-  //
+  // Would be useful if I had something to show before the game starts
+  // Currently unused
 }
 
 const onNextRound = (obj) => {
   const { ownerID, ownerName, image, tier } = obj;
+  // More global variables
   tierGuesses = {};
   imageOwner = ownerID;
   newRound = true;
@@ -278,7 +294,7 @@ const handleGuess = () => {
 
 
 const onGameDone = () => {
-
+  // Needs to be finished, after the guess counting is done
 }
 
 
@@ -299,6 +315,8 @@ const showCreateLobby = () => {
   //  This should help most of the time
   setTimeout(() => {
     document.querySelector('#payOption').addEventListener('change', () => {
+      // Removes the payment button
+      // and enables the extra options
       document.querySelector('#payLabel').remove();
       document.querySelector('#payOption').remove();
       document.querySelector('#roundSelect').removeAttribute('disabled');
@@ -439,6 +457,8 @@ const GamePrep = (props) => {
     </select>;
   //
 
+  // Increases the image count
+  // and calls the image handler
   const submit = () => {
     gameImageCount++;
     setImgNum(gameImageCount);
@@ -470,18 +490,20 @@ const GameRounds = (props) => {
   const [playersArr, setPlayersArr] = useState(createPlayerGuesses());
 
   // Initial set up
-  if (newRound) {
-    newRound = false;
+  if (newRound) { // True every time onNextRound is called
+    newRound = false; 
     setTimeout(() => {
       resetRound();
 
       // Should only be done once
       // Isn't
+      // The world doesn't end thankfully
       document.querySelector('#imageWrapper img').addEventListener('load', () => {
         const gameImg = document.querySelector('#imageWrapper img');
         gameImg.classList.remove('imgGuessed');
       });
 
+      // If this round is their own image, this user can't guess
       if (imageOwner === socket.id) {
         disableGuessing();
       }
@@ -498,7 +520,6 @@ const GameRounds = (props) => {
     tierGuesses[obj.id] = obj.guess;
 
     const newPlayersArr = createPlayerGuesses();
-
     setPlayersArr(newPlayersArr);
   }
   socket.on('guess made', onGuessMade)

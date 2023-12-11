@@ -7,6 +7,7 @@ const handleError = (message) => {
   document.querySelector('#message').classList.remove('hidden');
 };
 
+// Hides the message element
 const hideError = () => {
   document.querySelector('#message').classList.add('hidden');
 }

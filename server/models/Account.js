@@ -73,6 +73,8 @@ AccountSchema.statics.authenticate = async (username, password, callback) => {
   }
 };
 
+// Changes the password in the database
+// Should only be called after the credentials have been authenticated
 AccountSchema.statics.updatePassword = async (username, password) => {
   try {
     return await AccountModel.updateOne({ username }, { password }).exec();
