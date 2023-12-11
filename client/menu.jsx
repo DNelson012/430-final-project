@@ -59,19 +59,24 @@ const createGradedGuesses = (tier) => {
   let tempPlayersArr = [];
   const userKeys = Object.keys(lobbyUsers);
   for (let i = 0; i < userKeys.length; i++) {
-    if (userKeys[i] !== imageOwner) {
+    const userID = userKeys[i];
+    if (userID !== imageOwner) {
       let classes;
-      let guess = Number(tierGuesses[userKeys[i]].tier);
+      let guess = Number(tierGuesses[userID].tier);
       if (guess === Number(tier)) {
         classes = 'playerGuess correct'
+        // Add to the tally of correct guesses
+        totalGuesses[userID] += 1;
+        console.log("Ping up " + lobbyUsers[userID]);
       } else {
         classes = 'playerGuess incorrect'
       }
       guess = "Guess: " + gameTierOptions[guess - 1];
 
+
       tempPlayersArr.push(
         <div className={classes}>
-          <p> {lobbyUsers[userKeys[i]]}, </p>
+          <p> {lobbyUsers[userID]}, </p>
           <p> {guess} </p>
         </div>);
     }
@@ -224,9 +229,13 @@ const hostStartGame = () => {
   socket.emit('host start', lobbyUsers);
 }
 
-const onGameStart = (userArr) => {
-  lobbyUsers = userArr;
-  totalGuesses = {} // socket id : 0 // usersArr is id : name
+const onGameStart = (usersObj) => {
+  lobbyUsers = usersObj;
+  totalGuesses = {};
+  const users = Object.keys(usersObj);
+  for (let i = 0; i < users.length; i++) {
+    totalGuesses[users[i]] = 0;
+  }
 
   // Remove the links to log out and change password
   const links = document.querySelectorAll('#header a');
@@ -295,6 +304,7 @@ const handleGuess = () => {
 
 const onGameDone = () => {
   // Needs to be finished, after the guess counting is done
+  root.render(<GameResults />);
 }
 
 
@@ -494,6 +504,8 @@ const GameRounds = (props) => {
     newRound = false; 
     setTimeout(() => {
       resetRound();
+      document.querySelector('#imageDesc').innerText 
+        = `What did ${props.name} rank this?`;
 
       // Should only be done once
       // Isn't
@@ -529,6 +541,8 @@ const GameRounds = (props) => {
 
     setPlayersArr(newPlayersArr);
 
+    document.querySelector('#imageDesc').innerHTML 
+      = `${props.name} ranked this as "${gameTierOptions[props.tier - 1]}"`;
     document.querySelector('#imageWrapper img').classList.add('imgGuessed');
     document.querySelector('#guessSubmit').innerText = "Next Round Starting in 10s";
   }
@@ -554,7 +568,7 @@ const GameRounds = (props) => {
 
   return (
     <div id='gameRounds'>
-      <span>What did {props.name} rank this?</span>
+      <span id='imageDesc'>What did {props.name} rank this?</span>
       <div id='imageWrapper'>
         <img crossOrigin="anonymous"
           src={props.imgSrc}
@@ -570,6 +584,39 @@ const GameRounds = (props) => {
         onClick={handleGuess}>
         Guess
       </button>
+    </div>
+  );
+}
+
+const GameResults = (props) => {
+  const createPlayerResults = () => {
+    let tempPlayersArr = [];
+    const userKeys = Object.keys(lobbyUsers);
+    for (let i = 0; i < userKeys.length; i++) {
+      const userID = userKeys[i];
+      let classes = 'playerGuess'
+      let guesses = "Total: " + totalGuesses[userID];
+
+      tempPlayersArr.push(
+        <div className={classes}>
+          <p> {lobbyUsers[userID]}, </p>
+          <p> {guesses} </p>
+        </div>);
+    }
+
+    return tempPlayersArr;
+  }
+
+  const playersArr = createPlayerResults();
+  const playerGuesses =
+    <div id="playerGuesses">
+      {playersArr}
+    </div>;
+
+  return (
+    <div id='gameResults'>
+      <span>Correct Guesses:</span>
+      {playerGuesses}
     </div>
   );
 }

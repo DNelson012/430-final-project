@@ -125,36 +125,35 @@ should have these rules */
   }
 }
 
-
-
 #gameRounds {
-  #playerGuesses {
-    display: flex;
-    flex-flow: row nowrap;
-    align-items: center;
-    justify-content: center;
-
-    margin-top: 16px;
-
-    .playerGuess {
-      max-width: 350px;
-      margin: 8px;
-      padding: 8px;
-      display: block;
-      p {
-        margin: 0 0 16px;
-      }
-    }
-  }
-
   #imageWrapper {
     margin: 20px 0;
     max-width: 900px;
     max-height: 600px;
   }
+
   img {
     max-width: 900px;
     max-height: 600px;
+  }
+}
+#playerGuesses {
+  display: flex;
+  flex-flow: row nowrap;
+  align-items: center;
+  justify-content: center;
+
+  margin-top: 16px;
+
+  .playerGuess {
+    max-width: 350px;
+    margin: 8px;
+    padding: 8px;
+    display: block;
+
+    p {
+      margin: 0 0 16px;
+    }
   }
 }
 

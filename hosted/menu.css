@@ -122,22 +122,6 @@ should have these rules */
   display: block;
 }
 
-#gameRounds #playerGuesses {
-  display: flex;
-  flex-flow: row nowrap;
-  align-items: center;
-  justify-content: center;
-  margin-top: 16px;
-}
-#gameRounds #playerGuesses .playerGuess {
-  max-width: 350px;
-  margin: 8px;
-  padding: 8px;
-  display: block;
-}
-#gameRounds #playerGuesses .playerGuess p {
-  margin: 0 0 16px;
-}
 #gameRounds #imageWrapper {
   margin: 20px 0;
   max-width: 900px;
@@ -146,6 +130,23 @@ should have these rules */
 #gameRounds img {
   max-width: 900px;
   max-height: 600px;
+}
+
+#playerGuesses {
+  display: flex;
+  flex-flow: row nowrap;
+  align-items: center;
+  justify-content: center;
+  margin-top: 16px;
+}
+#playerGuesses .playerGuess {
+  max-width: 350px;
+  margin: 8px;
+  padding: 8px;
+  display: block;
+}
+#playerGuesses .playerGuess p {
+  margin: 0 0 16px;
 }
 
 #side {
