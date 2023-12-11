@@ -202,10 +202,12 @@ should have these rules */
 .correct {
   filter: brightness(110%);
   background-color: rgb(80, 255, 80);
+  border: 2px solid main.$primary
 }
 
 .incorrect {
   filter: brightness(110%);
   background-color: rgb(255, 80, 80);
   color: main.$primary;
+  border: 2px solid main.$primary
 }
